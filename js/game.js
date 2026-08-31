@@ -2,270 +2,286 @@ class Game {
 
     constructor() {
 
-        this.player = null;
+        window.game = this;
 
-        this.inventory = null;
 
-        this.shop = null;
+        this.canvas =
+            document.getElementById(
+                "gameCanvas"
+            );
 
-        this.npc = null;
+        this.ctx =
+            this.canvas.getContext(
+                "2d"
+            );
 
-        this.quest = null;
 
-        this.world = null;
+        this.input =
+            new Input();
 
-        this.battle = null;
 
-        this.gameEnded = false;
+        this.dungeon =
+            new Dungeon();
+
+
+        this.player =
+            new Player(
+                this.dungeon.width / 2,
+                this.dungeon.height / 2
+            );
+
+
+        this.camera =
+            new Camera(
+                window.innerWidth,
+                window.innerHeight
+            );
+
+
+        this.effects =
+            new Effects();
+
+
+        this.loop =
+            new GameLoop(this);
+
+
+        this.resize();
+
+
+        window.addEventListener(
+            "resize",
+            () => this.resize()
+        );
+
     }
 
 
     start() {
 
-        const name =
-            prompt(
-                "Введите имя героя:"
-            );
+        this.loop.start();
 
-
-        if (!name) {
-
-            return;
-        }
-
-
-        this.player =
-            new Player(name);
-
-
-        this.inventory =
-            new Inventory(
-                this.player
-            );
-
-
-        this.shop =
-            new Shop(
-                this.player
-            );
-
-
-        this.npc =
-            new NPC(
-                "Староста"
-            );
-
-
-        this.quest =
-            new Quest();
-
-
-        this.world =
-            new World();
-
-
-        this.gameEnded = false;
-
-
-        addLog(
-            `🎮 Добро пожаловать, ${name}!`
-        );
-
-
-        showScreen(
-            "villageScreen"
-        );
-
-
-        this.updateUI();
     }
 
 
-    updateUI() {
+    resize() {
 
-        if (!this.player) {
-            return;
+        const dpr =
+            Math.min(
+                window.devicePixelRatio || 1,
+                2
+            );
+
+
+        this.canvas.width =
+            window.innerWidth *
+            dpr;
+
+
+        this.canvas.height =
+            window.innerHeight *
+            dpr;
+
+
+        this.canvas.style.width =
+            window.innerWidth + "px";
+
+
+        this.canvas.style.height =
+            window.innerHeight + "px";
+
+
+        this.ctx.setTransform(
+            dpr,
+            0,
+            0,
+            dpr,
+            0,
+            0
+        );
+
+
+        this.camera.resize(
+            window.innerWidth,
+            window.innerHeight
+        );
+
+    }
+
+
+    update(dt) {
+
+        this.player.update(
+            dt,
+            this.input,
+            this.dungeon
+        );
+
+
+        this.camera.follow(
+            this.player,
+            this.dungeon.width,
+            this.dungeon.height
+        );
+
+
+        this.camera.updateShake(dt);
+
+
+        this.effects.update(dt);
+
+
+        if (
+            this.player.isMoving
+        ) {
+
+            if (
+                Math.random() < 0.15
+            ) {
+
+                this.effects.spawnDust(
+                    this.player.x,
+                    this.player.y + 15,
+                    1
+                );
+
+            }
+
         }
 
+    }
 
-        const hp =
+
+    render() {
+
+        const ctx =
+            this.ctx;
+
+
+        ctx.setTransform(
+            window.devicePixelRatio || 1,
+            0,
+            0,
+            window.devicePixelRatio || 1,
+            0,
+            0
+        );
+
+
+        ctx.clearRect(
+            0,
+            0,
+            window.innerWidth,
+            window.innerHeight
+        );
+
+
+        ctx.save();
+
+
+        this.camera.apply(ctx);
+
+
+        ctx.translate(
+            -this.camera.x,
+            -this.camera.y
+        );
+
+
+        this.dungeon.draw(
+            ctx,
+            this.camera
+        );
+
+
+        this.effects.draw(ctx);
+
+
+        this.player.draw(ctx);
+
+
+        ctx.restore();
+
+
+        this.updateHUD();
+
+    }
+
+
+    updateHUD() {
+
+        const hpPercent =
             (
-                this.player.health /
-                this.player.maxHealth
+                this.player.hp /
+                this.player.maxHp
             ) * 100;
 
 
-        document
-            .getElementById("playerName")
-            .textContent =
-                `👤 ${this.player.name}`;
-
-
-        document
-            .getElementById("healthBar")
-            .style.width =
-                `${hp}%`;
-
-
-        document
-            .getElementById("healthText")
-            .textContent =
-                `❤️ ${this.player.health} / ${this.player.maxHealth}`;
-
-
-        document
-            .getElementById("quickStats")
-            .textContent =
-                `⭐ Lv.${this.player.level} | ⚔️ ${this.player.attack} | 🛡️ ${this.player.defense} | 💰 ${this.player.gold}`;
-    }
-
-
-    startBattle(enemy) {
-
-        if (this.gameEnded) {
-            return;
-        }
-
-
-        this.battle =
-            new Battle(
-                this,
-                enemy
-            );
-
-
-        document
-            .getElementById("battleLog")
-            .innerHTML = "";
-
-
-        this.showEnemy();
-
-
-        showScreen(
-            "battleScreen"
-        );
-    }
-
-
-    showEnemy() {
-
-        const enemy =
-            this.battle.enemy;
-
-
-        const percent =
+        const xpPercent =
             (
-                enemy.health /
-                enemy.maxHealth
+                this.player.xp /
+                this.player.xpToNext
             ) * 100;
 
 
-        document
-            .getElementById("enemyInfo")
-            .innerHTML = `
+        document.getElementById(
+            "hpFill"
+        ).style.width =
+            `${hpPercent}%`;
 
-                <div class="enemyName">
-                    👹 ${enemy.name}
-                </div>
 
-                <div class="bar">
+        document.getElementById(
+            "xpFill"
+        ).style.width =
+            `${xpPercent}%`;
 
-                    <div
-                        class="health"
-                        style="width:${percent}%"
-                    ></div>
 
-                </div>
+        document.getElementById(
+            "levelValue"
+        ).textContent =
+            this.player.level;
 
-                <p>
-                    ❤️
-                    ${enemy.health}
-                    /
-                    ${enemy.maxHealth}
-                </p>
 
-            `;
+        document.getElementById(
+            "statsText"
+        ).textContent =
+            `HP ${Math.ceil(this.player.hp)} / ${this.player.maxHp}`;
+
     }
 
 
-    enemyDefeated(enemy) {
+    showMessage(message) {
 
-        if (this.quest) {
-
-            this.quest.enemyDefeated(
-                enemy
-            );
-        }
-
-
-        this.battle = null;
-
-
-        this.updateUI();
-
-
-        setTimeout(() => {
-
-            showScreen(
-                "locationScreen"
+        const element =
+            document.getElementById(
+                "centerMessage"
             );
 
 
-            renderLocation();
-
-        }, 500);
-    }
+        element.textContent =
+            message;
 
 
-    gameOver() {
+        element.style.opacity =
+            "1";
 
-        this.gameEnded = true;
 
-        showScreen(
-            "endScreen"
+        clearTimeout(
+            this.messageTimer
         );
 
 
-        document
-            .getElementById("endMessage")
-            .innerHTML = `
+        this.messageTimer =
+            setTimeout(
+                () => {
 
-                💀 GAME OVER
+                    element.style.opacity =
+                        "0";
 
-                <br><br>
+                },
+                1300
+            );
 
-                ${this.player.name}
-                погиб.
-
-                <br><br>
-
-                Приключение окончено.
-
-            `;
     }
 
-
-    victory() {
-
-        this.gameEnded = true;
-
-        showScreen(
-            "endScreen"
-        );
-
-
-        document
-            .getElementById("endMessage")
-            .innerHTML = `
-
-                🏆 ПОБЕДА!
-
-                <br><br>
-
-                Ты нашёл сокровище
-                и завершил приключение!
-
-            `;
-    }
 }
