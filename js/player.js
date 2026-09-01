@@ -18,7 +18,7 @@ class Player {
         this.maxHp = 100;
         this.hp = 100;
 
-        this.attack = 20;
+        this.attackPower = 20;
 
 
         // Направление взгляда
@@ -410,7 +410,7 @@ class Player {
         this.hp =
             this.maxHp;
 
-        this.attack += 5;
+        this.attackPower += 5;
 
 
         if (
