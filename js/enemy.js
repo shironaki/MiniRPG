@@ -16,6 +16,13 @@ class Enemy {
         this.flashTimer = 0;
         this.type = options.type || "shadow";
         this.name = options.name || "SHADOW BEAST";
+        this.sprite = this.loadSprite(options.sprite || "assets/enemies/shadow-beast.svg");
+    }
+
+    loadSprite(path) {
+        const image = new Image();
+        image.src = path;
+        return image;
     }
 
     update(dt, player, world) {
@@ -71,31 +78,13 @@ class Enemy {
         ctx.ellipse(0, 17, 20, 7, 0, 0, Math.PI * 2);
         ctx.fill();
 
-        ctx.fillStyle = e.flashTimer > 0 ? "#ffffff" : "#7a2032";
-        ctx.beginPath();
-        ctx.moveTo(-15, 15);
-        ctx.lineTo(-13, -12);
-        ctx.lineTo(-8, -19);
-        ctx.lineTo(0, -15);
-        ctx.lineTo(8, -19);
-        ctx.lineTo(13, -12);
-        ctx.lineTo(15, 15);
-        ctx.closePath();
-        ctx.fill();
-
-        ctx.fillStyle = "#391321";
-        ctx.beginPath();
-        ctx.arc(0, -20, 11, Math.PI, Math.PI * 2);
-        ctx.lineTo(11, -11);
-        ctx.lineTo(0, -7);
-        ctx.lineTo(-11, -11);
-        ctx.closePath();
-        ctx.fill();
-
-        ctx.fillStyle = "#e9b5ff";
-        ctx.fillRect(-7, -21, 4, 2);
-        ctx.fillRect(3, -21, 4, 2);
-
+        if (e.sprite && e.sprite.complete && e.sprite.naturalWidth > 0) {
+            ctx.globalAlpha = e.flashTimer > 0 ? 0.72 : 1;
+            ctx.drawImage(e.sprite, -38, -45, 76, 89);
+        } else {
+            ctx.fillStyle = e.flashTimer > 0 ? "#ffffff" : "#7a2032";
+            ctx.fillRect(-15, -18, 30, 36);
+        }
         ctx.restore();
 
         const hpPercent = e.hp / e.maxHp;
