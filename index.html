@@ -62,24 +62,36 @@
     <!-- MOBILE CONTROLS -->
     <div id="mobileControls">
 
-        <div id="joystick">
-            <div id="joystickKnob"></div>
-        </div>
+    <div
+        id="joystick"
+        class="controlJoystick moveJoystick"
+    >
+        <div id="joystickKnob"></div>
+    </div>
 
-        <div id="actionButtons">
 
-            <button
-                id="attackButton"
-                class="actionButton attack"
-            >
-                ⚔
-            </button>
+    <div
+        id="aimJoystick"
+        class="controlJoystick aimJoystick"
+    >
+        <div id="aimJoystickKnob"></div>
+    </div>
 
-            <button
+
+    <div id="actionButtons">
+
+        <button
+            id="attackButton"
+            class="actionButton attack"
+        >
+            ⚔
+        </button>
+
+        <button
                 id="dodgeButton"
                 class="actionButton dodge"
             >
-                ◈
+            ◈
             </button>
 
         </div>

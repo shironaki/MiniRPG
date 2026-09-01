@@ -20,13 +20,26 @@ class Player {
 
         this.attack = 20;
 
+
+        // Направление взгляда
+
+        this.aimX = 0;
+        this.aimY = 1;
+
+
         this.direction = "down";
 
         this.isMoving = false;
 
+
+        // Атака
+
         this.attackTimer = 0;
 
         this.attackDuration = 0.18;
+
+
+        // Dodge
 
         this.dodgeTimer = 0;
 
@@ -35,10 +48,11 @@ class Player {
         this.dodgeSpeed = 620;
 
         this.invulnerable = 0;
+
     }
 
 
-    update(dt, input, world) {
+    update(dt, input, world, camera) {
 
         this.attackTimer =
             Math.max(
@@ -65,55 +79,63 @@ class Player {
             input.getMovement();
 
 
+        const aim =
+            input.getAim(
+                this,
+                camera
+            );
+
+
+        this.aimX = aim.x;
+        this.aimY = aim.y;
+
+
         this.isMoving =
             Math.abs(movement.x) > 0.05 ||
             Math.abs(movement.y) > 0.05;
 
 
-        if (movement.x > 0) {
-            this.direction = "right";
-        }
-        else if (movement.x < 0) {
-            this.direction = "left";
-        }
-        else if (movement.y > 0) {
-            this.direction = "down";
-        }
-        else if (movement.y < 0) {
-            this.direction = "up";
-        }
+        this.updateDirection();
 
+
+        /*
+         * Dodge
+         */
 
         if (
             input.consumeDodge() &&
             this.dodgeTimer <= 0
         ) {
 
-            this.dodge(movement);
+            this.dodge(
+                movement,
+                world
+            );
 
         }
 
 
-        let speed = this.speed;
+        let speed =
+            this.speed;
 
 
-        if (this.dodgeTimer > 0) {
+        if (
+            this.dodgeTimer > 0
+        ) {
 
-            speed = this.dodgeSpeed;
+            speed =
+                this.dodgeSpeed;
 
         }
 
+
+        /*
+         * Движение по X
+         */
 
         const nextX =
             this.x +
             movement.x *
-            speed *
-            dt;
-
-
-        const nextY =
-            this.y +
-            movement.y *
             speed *
             dt;
 
@@ -132,6 +154,17 @@ class Player {
         }
 
 
+        /*
+         * Движение по Y
+         */
+
+        const nextY =
+            this.y +
+            movement.y *
+            speed *
+            dt;
+
+
         if (
             world.canMoveTo(
                 this.x,
@@ -146,11 +179,61 @@ class Player {
         }
 
 
+        /*
+         * Атака
+         */
+
         if (
             input.consumeAttack()
         ) {
 
             this.attack();
+
+        }
+
+    }
+
+
+    updateDirection() {
+
+        const angle =
+            Math.atan2(
+                this.aimY,
+                this.aimX
+            );
+
+
+        if (
+            angle > -Math.PI / 4 &&
+            angle <= Math.PI / 4
+        ) {
+
+            this.direction =
+                "right";
+
+        }
+        else if (
+            angle > Math.PI / 4 &&
+            angle <= Math.PI * 0.75
+        ) {
+
+            this.direction =
+                "down";
+
+        }
+        else if (
+            angle > Math.PI * 0.75 ||
+            angle <= -Math.PI * 0.75
+        ) {
+
+            this.direction =
+                "left";
+
+        }
+        else {
+
+            this.direction =
+                "up";
 
         }
 
@@ -174,7 +257,7 @@ class Player {
     }
 
 
-    dodge(movement) {
+    dodge(movement, world) {
 
         this.dodgeTimer =
             this.dodgeDuration;
@@ -184,39 +267,92 @@ class Player {
             this.dodgeDuration;
 
 
-        let dx = movement.x;
-        let dy = movement.y;
+        let dx =
+            movement.x;
 
+        let dy =
+            movement.y;
+
+
+        /*
+         * Если игрок стоит,
+         * dodge идёт по направлению взгляда.
+         */
 
         if (
-            dx === 0 &&
-            dy === 0
+            Math.abs(dx) < 0.05 &&
+            Math.abs(dy) < 0.05
         ) {
 
-            if (this.direction === "left") {
-                dx = -1;
-            }
+            dx =
+                this.aimX;
 
-            if (this.direction === "right") {
-                dx = 1;
-            }
-
-            if (this.direction === "up") {
-                dy = -1;
-            }
-
-            if (this.direction === "down") {
-                dy = 1;
-            }
+            dy =
+                this.aimY;
 
         }
 
 
-        this.x +=
-            dx * 90;
+        const length =
+            Math.hypot(dx, dy);
 
-        this.y +=
-            dy * 90;
+
+        if (length === 0) {
+            return;
+        }
+
+
+        dx /= length;
+        dy /= length;
+
+
+        const distance = 90;
+
+
+        const nextX =
+            this.x +
+            dx * distance;
+
+
+        const nextY =
+            this.y +
+            dy * distance;
+
+
+        /*
+         * Не позволяем dodge
+         * телепортировать игрока
+         * внутрь стены.
+         */
+
+        if (
+            world.canMoveTo(
+                nextX,
+                this.y,
+                this.width,
+                this.height
+            )
+        ) {
+
+            this.x =
+                nextX;
+
+        }
+
+
+        if (
+            world.canMoveTo(
+                this.x,
+                nextY,
+                this.width,
+                this.height
+            )
+        ) {
+
+            this.y =
+                nextY;
+
+        }
 
     }
 
@@ -292,16 +428,19 @@ class Player {
 
     draw(ctx) {
 
-        const x = this.x;
-        const y = this.y;
+        const x =
+            this.x;
+
+        const y =
+            this.y;
 
 
         /*
-         * Тень под персонажем
+         * Тень
          */
 
         ctx.fillStyle =
-            "rgba(0, 0, 0, 0.45)";
+            "rgba(0,0,0,0.45)";
 
 
         ctx.beginPath();
@@ -375,125 +514,105 @@ class Player {
 
 
         /*
-         * Глаза
+         * Глаза смотрят туда,
+         * куда направлен aim.
          */
+
+        const eyeForward = 7;
+
+        const eyeSide = 4;
+
+
+        const px =
+            -this.aimY;
+
+        const py =
+            this.aimX;
+
 
         ctx.fillStyle =
             "#9a63ff";
 
 
-        if (
-            this.direction === "left"
-        ) {
+        ctx.fillRect(
 
-            ctx.fillRect(
-                x - 8,
-                y - 22,
-                3,
-                3
-            );
+            x +
+            this.aimX * eyeForward +
+            px * eyeSide - 2,
 
-        }
-        else if (
-            this.direction === "right"
-        ) {
+            y - 20 +
+            this.aimY * eyeForward +
+            py * eyeSide - 2,
 
-            ctx.fillRect(
-                x + 5,
-                y - 22,
-                3,
-                3
-            );
+            4,
+            4
 
-        }
-        else {
+        );
 
-            ctx.fillRect(
-                x - 6,
-                y - 22,
-                3,
-                3
-            );
 
-            ctx.fillRect(
-                x + 3,
-                y - 22,
-                3,
-                3
-            );
+        ctx.fillRect(
 
-        }
+            x +
+            this.aimX * eyeForward -
+            px * eyeSide - 2,
+
+            y - 20 +
+            this.aimY * eyeForward -
+            py * eyeSide - 2,
+
+            4,
+            4
+
+        );
 
 
         /*
-         * Атака
+         * Визуальный aim.
+         * Пока очень тонкий,
+         * позже заменим оружием.
          */
 
         if (
             this.attackTimer > 0
         ) {
 
+            const angle =
+                Math.atan2(
+                    this.aimY,
+                    this.aimX
+                );
+
+
+            ctx.save();
+
+            ctx.translate(
+                x,
+                y
+            );
+
+            ctx.rotate(angle);
+
+
             ctx.strokeStyle =
-                "rgba(190, 150, 255, 0.95)";
+                "rgba(190,150,255,0.95)";
 
             ctx.lineWidth = 5;
 
+
             ctx.beginPath();
 
-
-            if (
-                this.direction === "left"
-            ) {
-
-                ctx.arc(
-                    x - 8,
-                    y,
-                    28,
-                    Math.PI * 0.6,
-                    Math.PI * 1.4
-                );
-
-            }
-            else if (
-                this.direction === "right"
-            ) {
-
-                ctx.arc(
-                    x + 8,
-                    y,
-                    28,
-                    -Math.PI * 0.4,
-                    Math.PI * 0.4
-                );
-
-            }
-            else if (
-                this.direction === "up"
-            ) {
-
-                ctx.arc(
-                    x,
-                    y - 8,
-                    28,
-                    Math.PI,
-                    Math.PI * 2
-                );
-
-            }
-            else {
-
-                ctx.arc(
-                    x,
-                    y + 8,
-                    28,
-                    0,
-                    Math.PI
-                );
-
-            }
-
+            ctx.arc(
+                9,
+                0,
+                28,
+                -0.65,
+                0.65
+            );
 
             ctx.stroke();
+
+
+            ctx.restore();
 
         }
 

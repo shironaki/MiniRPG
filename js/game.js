@@ -10,6 +10,7 @@ class Game {
                 "gameCanvas"
             );
 
+
         this.ctx =
             this.canvas.getContext(
                 "2d"
@@ -24,10 +25,21 @@ class Game {
             new Dungeon();
 
 
+        /*
+         * Безопасный spawn.
+         */
+
+        const spawn =
+            this.dungeon.getSpawnPoint(
+                28,
+                36
+            );
+
+
         this.player =
             new Player(
-                this.dungeon.width / 2,
-                this.dungeon.height / 2
+                spawn.x,
+                spawn.y
             );
 
 
@@ -77,7 +89,6 @@ class Game {
             window.innerWidth *
             dpr;
 
-
         this.canvas.height =
             window.innerHeight *
             dpr;
@@ -85,7 +96,6 @@ class Game {
 
         this.canvas.style.width =
             window.innerWidth + "px";
-
 
         this.canvas.style.height =
             window.innerHeight + "px";
@@ -114,7 +124,8 @@ class Game {
         this.player.update(
             dt,
             this.input,
-            this.dungeon
+            this.dungeon,
+            this.camera
         );
 
 
@@ -158,11 +169,15 @@ class Game {
             this.ctx;
 
 
+        const dpr =
+            window.devicePixelRatio || 1;
+
+
         ctx.setTransform(
-            window.devicePixelRatio || 1,
+            dpr,
             0,
             0,
-            window.devicePixelRatio || 1,
+            dpr,
             0,
             0
         );
@@ -245,7 +260,9 @@ class Game {
         document.getElementById(
             "statsText"
         ).textContent =
-            `HP ${Math.ceil(this.player.hp)} / ${this.player.maxHp}`;
+            `HP ${Math.ceil(
+                this.player.hp
+            )} / ${this.player.maxHp}`;
 
     }
 

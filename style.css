@@ -458,3 +458,146 @@ body {
     }
 
 }
+
+/* =========================================
+   DUAL JOYSTICK
+========================================= */
+
+.controlJoystick {
+    position: relative;
+
+    width: 125px;
+    height: 125px;
+
+    border-radius: 50%;
+
+    background:
+        rgba(255, 255, 255, 0.045);
+
+    border:
+        2px solid
+        rgba(255, 255, 255, 0.12);
+
+    pointer-events: auto;
+}
+
+
+.controlJoystick > div {
+    position: absolute;
+
+    left: 50%;
+    top: 50%;
+
+    width: 58px;
+    height: 58px;
+
+    transform:
+        translate(-50%, -50%);
+
+    border-radius: 50%;
+
+    pointer-events: none;
+}
+
+
+/* Движение */
+
+.moveJoystick {
+    border-color:
+        rgba(255,255,255,0.12);
+}
+
+
+.moveJoystick > div {
+    background:
+        rgba(160,120,255,0.35);
+
+    border:
+        2px solid
+        rgba(190,160,255,0.5);
+
+    box-shadow:
+        0 0 20px
+        rgba(130,80,255,0.25);
+}
+
+
+/* Прицел */
+
+.aimJoystick {
+    position: absolute;
+
+    right: 135px;
+    bottom:
+        max(22px, env(safe-area-inset-bottom));
+
+    border-color:
+        rgba(220,180,255,0.18);
+
+    background:
+        rgba(130,80,200,0.06);
+}
+
+
+.aimJoystick > div {
+    background:
+        rgba(180,130,255,0.28);
+
+    border:
+        2px solid
+        rgba(210,180,255,0.55);
+
+    box-shadow:
+        0 0 25px
+        rgba(160,90,255,0.3);
+}
+
+
+/* На мобильном размещаем красиво */
+
+@media (max-width: 799px) {
+
+    #mobileControls {
+        padding-left: 20px;
+        padding-right: 20px;
+    }
+
+
+    .moveJoystick {
+        position: absolute;
+
+        left: 20px;
+
+        bottom:
+            max(22px, env(safe-area-inset-bottom));
+    }
+
+
+    .aimJoystick {
+        right: 135px;
+    }
+
+}
+
+
+/* Маленькие экраны */
+
+@media (max-width: 430px) {
+
+    .controlJoystick {
+        width: 110px;
+        height: 110px;
+    }
+
+
+    .controlJoystick > div {
+        width: 52px;
+        height: 52px;
+    }
+
+
+    .aimJoystick {
+        right: 105px;
+    }
+
+}

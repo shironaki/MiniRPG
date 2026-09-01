@@ -4,48 +4,138 @@ class Input {
 
         this.keys = {};
 
-        this.joystick = {
+        this.mouse = {
+            x: window.innerWidth / 2,
+            y: window.innerHeight / 2,
+            active: false
+        };
+
+
+        this.moveJoystick = {
             active: false,
             x: 0,
             y: 0
         };
 
+
+        this.aimJoystick = {
+            active: false,
+            x: 0,
+            y: 0
+        };
+
+
         this.attackPressed = false;
         this.dodgePressed = false;
 
-        this.joystickElement =
-            document.getElementById("joystick");
 
-        this.joystickKnob =
-            document.getElementById("joystickKnob");
+        this.moveJoystickElement =
+            document.getElementById(
+                "joystick"
+            );
+
+        this.moveJoystickKnob =
+            document.getElementById(
+                "joystickKnob"
+            );
+
+
+        this.aimJoystickElement =
+            document.getElementById(
+                "aimJoystick"
+            );
+
+        this.aimJoystickKnob =
+            document.getElementById(
+                "aimJoystickKnob"
+            );
+
 
         this.setupKeyboard();
-        this.setupTouch();
+        this.setupMouse();
+        this.setupJoystick(
+            this.moveJoystick,
+            this.moveJoystickElement,
+            this.moveJoystickKnob
+        );
+
+        this.setupJoystick(
+            this.aimJoystick,
+            this.aimJoystickElement,
+            this.aimJoystickKnob
+        );
+
         this.setupButtons();
     }
 
 
     setupKeyboard() {
 
-        window.addEventListener("keydown", event => {
+        window.addEventListener(
+            "keydown",
+            event => {
 
-            this.keys[event.code] = true;
+                this.keys[event.code] = true;
 
-            if (
-                event.code === "Space" ||
-                event.code.startsWith("Arrow")
-            ) {
-                event.preventDefault();
+
+                if (
+                    event.code === "Space" ||
+                    event.code.startsWith("Arrow")
+                ) {
+
+                    event.preventDefault();
+
+                }
+
             }
+        );
 
-        });
+
+        window.addEventListener(
+            "keyup",
+            event => {
+
+                this.keys[event.code] = false;
+
+            }
+        );
+
+    }
 
 
-        window.addEventListener("keyup", event => {
+    setupMouse() {
 
-            this.keys[event.code] = false;
+        window.addEventListener(
+            "pointermove",
+            event => {
 
-        });
+                this.mouse.x =
+                    event.clientX;
+
+                this.mouse.y =
+                    event.clientY;
+
+                this.mouse.active = true;
+
+            }
+        );
+
+
+        window.addEventListener(
+            "pointerdown",
+            event => {
+
+                if (
+                    event.pointerType === "mouse" &&
+                    event.button === 0
+                ) {
+
+                    this.attackPressed = true;
+
+                }
+
+            }
+        );
 
     }
 
@@ -53,107 +143,129 @@ class Input {
     setupButtons() {
 
         const attack =
-            document.getElementById("attackButton");
+            document.getElementById(
+                "attackButton"
+            );
 
         const dodge =
-            document.getElementById("dodgeButton");
+            document.getElementById(
+                "dodgeButton"
+            );
 
 
-        attack.addEventListener(
-            "pointerdown",
-            event => {
+        if (attack) {
 
-                event.preventDefault();
+            attack.addEventListener(
+                "pointerdown",
+                event => {
 
-                this.attackPressed = true;
+                    event.preventDefault();
 
-            }
-        );
+                    this.attackPressed = true;
+
+                }
+            );
+
+        }
 
 
-        dodge.addEventListener(
-            "pointerdown",
-            event => {
+        if (dodge) {
 
-                event.preventDefault();
+            dodge.addEventListener(
+                "pointerdown",
+                event => {
 
-                this.dodgePressed = true;
+                    event.preventDefault();
 
-            }
-        );
+                    this.dodgePressed = true;
+
+                }
+            );
+
+        }
 
     }
 
 
-    setupTouch() {
+    setupJoystick(
+        joystick,
+        element,
+        knob
+    ) {
 
-        if (!this.joystickElement) {
+        if (!element || !knob) {
             return;
         }
 
 
-        this.joystickElement.addEventListener(
+        element.addEventListener(
             "pointerdown",
             event => {
 
                 event.preventDefault();
 
-                this.joystick.active = true;
+                joystick.active = true;
 
-                this.joystickElement.setPointerCapture(
+                element.setPointerCapture(
                     event.pointerId
                 );
 
-                this.updateJoystick(event);
+                this.updateJoystick(
+                    joystick,
+                    element,
+                    knob,
+                    event
+                );
 
             }
         );
 
 
-        this.joystickElement.addEventListener(
+        element.addEventListener(
             "pointermove",
             event => {
 
-                if (!this.joystick.active) {
+                if (!joystick.active) {
                     return;
                 }
 
                 event.preventDefault();
 
-                this.updateJoystick(event);
+                this.updateJoystick(
+                    joystick,
+                    element,
+                    knob,
+                    event
+                );
 
             }
         );
 
 
-        const release = event => {
+        const release = () => {
 
-            if (!this.joystick.active) {
-                return;
-            }
+            joystick.active = false;
 
-            this.joystick.active = false;
+            joystick.x = 0;
+            joystick.y = 0;
 
-            this.joystick.x = 0;
-            this.joystick.y = 0;
-
-            this.joystickKnob.style.transform =
+            knob.style.transform =
                 "translate(-50%, -50%)";
 
         };
 
 
-        this.joystickElement.addEventListener(
+        element.addEventListener(
             "pointerup",
             release
         );
 
-        this.joystickElement.addEventListener(
+        element.addEventListener(
             "pointercancel",
             release
         );
 
-        this.joystickElement.addEventListener(
+        element.addEventListener(
             "lostpointercapture",
             release
         );
@@ -161,24 +273,33 @@ class Input {
     }
 
 
-    updateJoystick(event) {
+    updateJoystick(
+        joystick,
+        element,
+        knob,
+        event
+    ) {
 
         const rect =
-            this.joystickElement.getBoundingClientRect();
+            element.getBoundingClientRect();
 
 
         const centerX =
-            rect.left + rect.width / 2;
+            rect.left +
+            rect.width / 2;
 
         const centerY =
-            rect.top + rect.height / 2;
+            rect.top +
+            rect.height / 2;
 
 
         let dx =
-            event.clientX - centerX;
+            event.clientX -
+            centerX;
 
         let dy =
-            event.clientY - centerY;
+            event.clientY -
+            centerY;
 
 
         const radius =
@@ -192,23 +313,28 @@ class Input {
         if (distance > radius) {
 
             dx =
-                dx / distance * radius;
+                dx / distance *
+                radius;
 
             dy =
-                dy / distance * radius;
+                dy / distance *
+                radius;
 
         }
 
 
-        this.joystick.x =
+        joystick.x =
             dx / radius;
 
-        this.joystick.y =
+        joystick.y =
             dy / radius;
 
 
-        this.joystickKnob.style.transform =
-            `translate(calc(-50% + ${dx}px), calc(-50% + ${dy}px))`;
+        knob.style.transform =
+            `translate(
+                calc(-50% + ${dx}px),
+                calc(-50% + ${dy}px)
+            )`;
 
     }
 
@@ -223,28 +349,39 @@ class Input {
             this.keys["KeyA"] ||
             this.keys["ArrowLeft"]
         ) {
+
             x -= 1;
+
         }
+
 
         if (
             this.keys["KeyD"] ||
             this.keys["ArrowRight"]
         ) {
+
             x += 1;
+
         }
+
 
         if (
             this.keys["KeyW"] ||
             this.keys["ArrowUp"]
         ) {
+
             y -= 1;
+
         }
+
 
         if (
             this.keys["KeyS"] ||
             this.keys["ArrowDown"]
         ) {
+
             y += 1;
+
         }
 
 
@@ -253,8 +390,11 @@ class Input {
             y === 0
         ) {
 
-            x = this.joystick.x;
-            y = this.joystick.y;
+            x =
+                this.moveJoystick.x;
+
+            y =
+                this.moveJoystick.y;
 
         }
 
@@ -279,11 +419,90 @@ class Input {
     }
 
 
+    getAim(player, camera) {
+
+        // Мобильный aim joystick
+
+        if (
+            this.aimJoystick.active ||
+            Math.abs(this.aimJoystick.x) > 0.05 ||
+            Math.abs(this.aimJoystick.y) > 0.05
+        ) {
+
+            const x =
+                this.aimJoystick.x;
+
+            const y =
+                this.aimJoystick.y;
+
+
+            const length =
+                Math.hypot(x, y);
+
+
+            if (length > 0.05) {
+
+                return {
+                    x: x / length,
+                    y: y / length
+                };
+
+            }
+
+        }
+
+
+        // ПК — мышь
+
+        const playerScreenX =
+            player.x - camera.x;
+
+        const playerScreenY =
+            player.y - camera.y;
+
+
+        let x =
+            this.mouse.x -
+            playerScreenX;
+
+        let y =
+            this.mouse.y -
+            playerScreenY;
+
+
+        const length =
+            Math.hypot(x, y);
+
+
+        if (length > 8) {
+
+            return {
+                x: x / length,
+                y: y / length
+            };
+
+        }
+
+
+        // Если прицел не задан —
+        // сохраняем старое направление.
+
+        return {
+            x: player.aimX,
+            y: player.aimY
+        };
+
+    }
+
+
     consumeAttack() {
 
         if (!this.attackPressed) {
+
             return false;
+
         }
+
 
         this.attackPressed = false;
 
@@ -300,11 +519,13 @@ class Input {
         ) {
 
             this.dodgePressed = false;
+
             this.keys["Space"] = false;
 
             return true;
 
         }
+
 
         return false;
 

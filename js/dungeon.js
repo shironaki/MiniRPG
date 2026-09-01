@@ -8,30 +8,24 @@ class Dungeon {
         this.rows = 25;
 
         this.width =
-            this.cols *
-            this.tileSize;
+            this.cols * this.tileSize;
 
         this.height =
-            this.rows *
-            this.tileSize;
-
+            this.rows * this.tileSize;
 
         this.walls = [];
 
         this.generate();
-
     }
 
 
     generate() {
 
-        // внешние стены
+        this.walls = [];
 
-        for (
-            let x = 0;
-            x < this.cols;
-            x++
-        ) {
+        // Внешняя граница
+
+        for (let x = 0; x < this.cols; x++) {
 
             this.walls.push({
                 x: x * this.tileSize,
@@ -40,12 +34,9 @@ class Dungeon {
                 height: this.tileSize
             });
 
-
             this.walls.push({
                 x: x * this.tileSize,
-                y:
-                    (this.rows - 1) *
-                    this.tileSize,
+                y: (this.rows - 1) * this.tileSize,
                 width: this.tileSize,
                 height: this.tileSize
             });
@@ -53,11 +44,7 @@ class Dungeon {
         }
 
 
-        for (
-            let y = 1;
-            y < this.rows - 1;
-            y++
-        ) {
+        for (let y = 1; y < this.rows - 1; y++) {
 
             this.walls.push({
                 x: 0,
@@ -66,11 +53,8 @@ class Dungeon {
                 height: this.tileSize
             });
 
-
             this.walls.push({
-                x:
-                    (this.cols - 1) *
-                    this.tileSize,
+                x: (this.cols - 1) * this.tileSize,
                 y: y * this.tileSize,
                 width: this.tileSize,
                 height: this.tileSize
@@ -79,7 +63,7 @@ class Dungeon {
         }
 
 
-        // внутренние колонны
+        // Внутренние препятствия
 
         const obstacles = [
 
@@ -102,35 +86,21 @@ class Dungeon {
         ];
 
 
-        for (
-            const obstacle of obstacles
-        ) {
+        for (const obstacle of obstacles) {
 
-            const [
-                x,
-                y,
-                width,
-                height
-            ] = obstacle;
-
+            const [x, y, width, height] =
+                obstacle;
 
             this.walls.push({
 
-                x:
-                    x *
-                    this.tileSize,
-
-                y:
-                    y *
-                    this.tileSize,
+                x: x * this.tileSize,
+                y: y * this.tileSize,
 
                 width:
-                    width *
-                    this.tileSize,
+                    width * this.tileSize,
 
                 height:
-                    height *
-                    this.tileSize
+                    height * this.tileSize
 
             });
 
@@ -139,49 +109,27 @@ class Dungeon {
     }
 
 
-    canMoveTo(
-        x,
-        y,
-        width,
-        height
-    ) {
+    canMoveTo(x, y, width, height) {
 
         const box = {
 
-            left:
-                x - width / 2,
+            left: x - width / 2,
+            right: x + width / 2,
 
-            right:
-                x + width / 2,
-
-            top:
-                y - height / 2,
-
-            bottom:
-                y + height / 2
+            top: y - height / 2,
+            bottom: y + height / 2
 
         };
 
 
-        for (
-            const wall of this.walls
-        ) {
+        for (const wall of this.walls) {
 
             if (
 
-                box.right >
-                    wall.x &&
-
-                box.left <
-                    wall.x +
-                    wall.width &&
-
-                box.bottom >
-                    wall.y &&
-
-                box.top <
-                    wall.y +
-                    wall.height
+                box.right > wall.x &&
+                box.left < wall.x + wall.width &&
+                box.bottom > wall.y &&
+                box.top < wall.y + wall.height
 
             ) {
 
@@ -193,6 +141,133 @@ class Dungeon {
 
 
         return true;
+    }
+
+
+    /*
+     * Ищем безопасную точку появления.
+     */
+
+    getSpawnPoint(width = 28, height = 36) {
+
+        const centerX =
+            this.width / 2;
+
+        const centerY =
+            this.height / 2;
+
+
+        // Сначала пытаемся центр.
+
+        if (
+            this.canMoveTo(
+                centerX,
+                centerY,
+                width,
+                height
+            )
+        ) {
+
+            return {
+                x: centerX,
+                y: centerY
+            };
+
+        }
+
+
+        // Затем ищем ближайшую свободную клетку.
+
+        const margin = this.tileSize;
+
+        const step = this.tileSize / 2;
+
+
+        for (
+            let radius = 1;
+            radius < 20;
+            radius++
+        ) {
+
+            const distance =
+                radius * step;
+
+
+            const points = [
+
+                [centerX + distance, centerY],
+                [centerX - distance, centerY],
+                [centerX, centerY + distance],
+                [centerX, centerY - distance],
+
+                [
+                    centerX + distance,
+                    centerY + distance
+                ],
+
+                [
+                    centerX - distance,
+                    centerY - distance
+                ],
+
+                [
+                    centerX + distance,
+                    centerY - distance
+                ],
+
+                [
+                    centerX - distance,
+                    centerY + distance
+                ]
+
+            ];
+
+
+            for (const point of points) {
+
+                const x = point[0];
+                const y = point[1];
+
+
+                if (
+                    x < margin ||
+                    y < margin ||
+                    x > this.width - margin ||
+                    y > this.height - margin
+                ) {
+                    continue;
+                }
+
+
+                if (
+                    this.canMoveTo(
+                        x,
+                        y,
+                        width,
+                        height
+                    )
+                ) {
+
+                    return {
+                        x,
+                        y
+                    };
+
+                }
+
+            }
+
+        }
+
+
+        // Резервная точка.
+
+        return {
+
+            x: this.tileSize * 2,
+            y: this.tileSize * 2
+
+        };
 
     }
 
@@ -201,8 +276,7 @@ class Dungeon {
 
         const startX =
             Math.floor(
-                camera.x /
-                this.tileSize
+                camera.x / this.tileSize
             ) - 1;
 
         const endX =
@@ -210,15 +284,13 @@ class Dungeon {
                 (
                     camera.x +
                     camera.width
-                ) /
-                this.tileSize
+                ) / this.tileSize
             ) + 1;
 
 
         const startY =
             Math.floor(
-                camera.y /
-                this.tileSize
+                camera.y / this.tileSize
             ) - 1;
 
         const endY =
@@ -226,12 +298,11 @@ class Dungeon {
                 (
                     camera.y +
                     camera.height
-                ) /
-                this.tileSize
+                ) / this.tileSize
             ) + 1;
 
 
-        // floor
+        // Пол
 
         ctx.fillStyle =
             "#0c1018";
@@ -244,7 +315,7 @@ class Dungeon {
         );
 
 
-        // tiles
+        // Сетка пола
 
         for (
             let y = startY;
@@ -272,10 +343,13 @@ class Dungeon {
                     "rgba(120,130,160,0.045)";
 
                 ctx.strokeRect(
+
                     x * this.tileSize,
                     y * this.tileSize,
+
                     this.tileSize,
                     this.tileSize
+
                 );
 
             }
@@ -283,28 +357,17 @@ class Dungeon {
         }
 
 
-        // walls
+        // Стены
 
-        for (
-            const wall of this.walls
-        ) {
+        for (const wall of this.walls) {
 
             if (
-                wall.x +
-                wall.width <
-                camera.x ||
 
-                wall.x >
-                camera.x +
-                camera.width ||
+                wall.x + wall.width < camera.x ||
+                wall.x > camera.x + camera.width ||
+                wall.y + wall.height < camera.y ||
+                wall.y > camera.y + camera.height
 
-                wall.y +
-                wall.height <
-                camera.y ||
-
-                wall.y >
-                camera.y +
-                camera.height
             ) {
 
                 continue;
@@ -316,10 +379,12 @@ class Dungeon {
                 "#202938";
 
             ctx.fillRect(
+
                 wall.x,
                 wall.y,
                 wall.width,
                 wall.height
+
             );
 
 
@@ -329,10 +394,12 @@ class Dungeon {
             ctx.lineWidth = 2;
 
             ctx.strokeRect(
+
                 wall.x,
                 wall.y,
                 wall.width,
                 wall.height
+
             );
 
 
@@ -340,10 +407,13 @@ class Dungeon {
                 "rgba(255,255,255,0.025)";
 
             ctx.fillRect(
+
                 wall.x + 5,
                 wall.y + 5,
+
                 wall.width - 10,
                 5
+
             );
 
         }
