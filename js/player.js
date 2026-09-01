@@ -31,11 +31,23 @@ class Player {
 
         this.walkTime = 0;
         this.attackFlash = 0;
+
+        // Separate directional assets. Physics remain independent from visuals.
+        this.sprites = {
+            down: this.loadSprite("assets/player/player-down.svg"),
+            up: this.loadSprite("assets/player/player-up.svg"),
+            right: this.loadSprite("assets/player/player-side.svg"),
+            left: this.loadSprite("assets/player/player-side-left.svg")
+        };
     }
 
+    loadSprite(path) {
+        const image = new Image();
+        image.src = path;
+        return image;
+    }
 
     update(dt, input, world, camera) {
-
         this.attackTimer = Math.max(0, this.attackTimer - dt);
         this.dodgeTimer = Math.max(0, this.dodgeTimer - dt);
         this.invulnerable = Math.max(0, this.invulnerable - dt);
@@ -76,7 +88,6 @@ class Player {
         }
     }
 
-
     updateDirection() {
         const angle = Math.atan2(this.aimY, this.aimX);
 
@@ -91,7 +102,6 @@ class Player {
         }
     }
 
-
     attack() {
         if (this.attackTimer > 0) {
             return;
@@ -100,7 +110,6 @@ class Player {
         this.attackTimer = this.attackDuration;
         this.attackFlash = this.attackDuration;
     }
-
 
     dodge(movement, world) {
         this.dodgeTimer = this.dodgeDuration;
@@ -135,7 +144,6 @@ class Player {
         }
     }
 
-
     takeDamage(amount) {
         if (this.invulnerable > 0) {
             return;
@@ -143,7 +151,6 @@ class Player {
 
         this.hp = Math.max(0, this.hp - amount);
     }
-
 
     gainXP(amount) {
         this.xp += amount;
@@ -153,7 +160,6 @@ class Player {
             this.levelUp();
         }
     }
-
 
     levelUp() {
         this.level++;
@@ -167,24 +173,23 @@ class Player {
         }
     }
 
-
     draw(ctx) {
-
         const x = this.x;
         const y = this.y;
         const bob = this.isMoving ? Math.sin(this.walkTime) * 2 : 0;
         const dodgeAlpha = this.invulnerable > 0 ? 0.72 : 1;
+        const sprite = this.sprites[this.direction];
 
         ctx.save();
         ctx.globalAlpha = dodgeAlpha;
 
-        // Ground shadow.
+        // Ground shadow stays procedural and follows the physics body.
         ctx.fillStyle = "rgba(0,0,0,0.55)";
         ctx.beginPath();
         ctx.ellipse(x, y + 18, 20, 7, 0, 0, Math.PI * 2);
         ctx.fill();
 
-        // Shadow aura behind the character.
+        // Soft shadow aura.
         const aura = ctx.createRadialGradient(x, y - 5, 2, x, y - 5, 32);
         aura.addColorStop(0, "rgba(125,75,255,0.20)");
         aura.addColorStop(1, "rgba(55,25,100,0)");
@@ -193,90 +198,34 @@ class Player {
         ctx.arc(x, y - 4, 32, 0, Math.PI * 2);
         ctx.fill();
 
-        // Long dark coat.
-        ctx.fillStyle = "#171322";
-        ctx.beginPath();
-        ctx.moveTo(x - 14, y - 8 + bob);
-        ctx.lineTo(x - 12, y + 15 + bob);
-        ctx.lineTo(x, y + 11 + bob);
-        ctx.lineTo(x + 12, y + 15 + bob);
-        ctx.lineTo(x + 14, y - 8 + bob);
-        ctx.closePath();
-        ctx.fill();
+        // The visual asset is larger than the collision body by design.
+        if (sprite && sprite.complete && sprite.naturalWidth > 0) {
+            const drawWidth = 76;
+            const drawHeight = 89;
+            ctx.drawImage(
+                sprite,
+                x - drawWidth / 2,
+                y - 52 + bob,
+                drawWidth,
+                drawHeight
+            );
+        } else {
+            // Safe fallback while the asset is loading.
+            ctx.fillStyle = "#171322";
+            ctx.fillRect(x - 14, y - 8 + bob, 28, 23);
+            ctx.fillStyle = "#d9aa90";
+            ctx.beginPath();
+            ctx.arc(x, y - 20 + bob, 10, 0, Math.PI * 2);
+            ctx.fill();
+        }
 
-        ctx.strokeStyle = "#44315f";
-        ctx.lineWidth = 2;
-        ctx.stroke();
-
-        // Violet inner coat / chest.
-        ctx.fillStyle = "#39265b";
-        ctx.beginPath();
-        ctx.moveTo(x - 8, y - 11 + bob);
-        ctx.lineTo(x, y + 8 + bob);
-        ctx.lineTo(x + 8, y - 11 + bob);
-        ctx.closePath();
-        ctx.fill();
-
-        // Neck.
-        ctx.fillStyle = "#c5967e";
-        ctx.fillRect(x - 4, y - 13 + bob, 8, 7);
-
-        // Head.
-        ctx.fillStyle = "#d9aa90";
-        ctx.beginPath();
-        ctx.arc(x, y - 20 + bob, 10.5, 0, Math.PI * 2);
-        ctx.fill();
-
-        // Tousled black hair silhouette.
-        ctx.fillStyle = "#0a0910";
-        ctx.beginPath();
-        ctx.moveTo(x - 11, y - 21 + bob);
-        ctx.lineTo(x - 8, y - 31 + bob);
-        ctx.lineTo(x - 3, y - 27 + bob);
-        ctx.lineTo(x + 1, y - 33 + bob);
-        ctx.lineTo(x + 5, y - 27 + bob);
-        ctx.lineTo(x + 11, y - 30 + bob);
-        ctx.lineTo(x + 10, y - 17 + bob);
-        ctx.lineTo(x + 5, y - 21 + bob);
-        ctx.lineTo(x, y - 18 + bob);
-        ctx.lineTo(x - 6, y - 21 + bob);
-        ctx.closePath();
-        ctx.fill();
-
-        // Eyes track the aim direction.
-        const eyeForward = 5.5;
-        const eyeSide = 3.2;
-        const px = -this.aimY;
-        const py = this.aimX;
-
-        ctx.fillStyle = "#b58aff";
-        ctx.shadowBlur = 7;
-        ctx.shadowColor = "#8d55ff";
-
-        ctx.fillRect(
-            x + this.aimX * eyeForward + px * eyeSide - 1.5,
-            y - 20 + bob + this.aimY * eyeForward + py * eyeSide - 1.5,
-            3,
-            3
-        );
-
-        ctx.fillRect(
-            x + this.aimX * eyeForward - px * eyeSide - 1.5,
-            y - 20 + bob + this.aimY * eyeForward - py * eyeSide - 1.5,
-            3,
-            3
-        );
-
-        ctx.shadowBlur = 0;
-
-        // Attack arc.
+        // Attack arc is gameplay feedback, independent from the sprite.
         if (this.attackTimer > 0) {
             const angle = Math.atan2(this.aimY, this.aimX);
 
             ctx.save();
             ctx.translate(x, y - 2);
             ctx.rotate(angle);
-
             ctx.shadowBlur = 18;
             ctx.shadowColor = "#9a63ff";
             ctx.strokeStyle = "rgba(205,175,255,0.95)";
@@ -284,11 +233,10 @@ class Player {
             ctx.beginPath();
             ctx.arc(13, 0, 27, -0.75, 0.75);
             ctx.stroke();
-
             ctx.restore();
         }
 
-        // Dodge trails.
+        // Dodge ring.
         if (this.invulnerable > 0) {
             ctx.strokeStyle = "rgba(170,130,255,0.55)";
             ctx.lineWidth = 3;
