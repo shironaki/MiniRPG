@@ -42,6 +42,22 @@ class Game {
                 spawn.y
             );
 
+        this.enemy = {
+            x: spawn.x,
+            y: spawn.y - 90,
+
+            width: 30,
+            height: 36,
+
+            maxHp: 60,
+            hp: 60,
+
+            xpReward: 50,
+
+            hitTimer: 0,
+            alive: true
+        };
+
 
         this.camera =
             new Camera(
@@ -125,7 +141,8 @@ class Game {
             dt,
             this.input,
             this.dungeon,
-            this.camera
+            this.camera,
+            this.updateEnemy(dt)
         );
 
 
@@ -160,6 +177,99 @@ class Game {
 
         }
 
+    }
+
+    updateEnemy(dt) {
+
+    if (!this.enemy.alive) {
+            return;
+        }
+
+        this.enemy.hitTimer =
+            Math.max(
+                0,
+                this.enemy.hitTimer - dt
+            );
+
+    /*
+     * Проверяем начало новой атаки.
+     */
+    if (
+        this.player.attackTimer > 0 &&
+        this.player.attackTimer >=
+        this.player.attackDuration - 0.05 &&
+        this.enemy.hitTimer <= 0
+        ) {
+
+            const dx =
+                this.enemy.x -
+                this.player.x;
+
+            const dy =
+                this.enemy.y -
+                this.player.y;
+
+            const distance =
+                Math.hypot(dx, dy);
+
+        /*
+         * Максимальная дистанция удара.
+         */
+            const attackRange = 55;
+
+        if (
+            distance <= attackRange
+            ) {
+
+            /*
+             * Проверяем,
+             * находится ли враг
+             * перед игроком.
+             */
+            const length =
+                Math.max(
+                    distance,
+                    0.001
+                );
+
+            const dirX =
+                dx / length;
+
+            const dirY =
+                dy / length;
+
+            const dot =
+                dirX * this.player.aimX +
+                dirY * this.player.aimY;
+
+            /*
+             * ~90 градусов перед игроком.
+             */
+            if (dot > 0.25) {
+
+                this.enemy.hp -=
+                    this.player.attackPower;
+
+                this.enemy.hitTimer = 0.18;
+
+                if (
+                    this.enemy.hp <= 0
+                    ) {
+
+                        this.enemy.hp = 0;
+                        this.enemy.alive = false;
+
+                        this.player.gainXP(
+                            this.enemy.xpReward
+                        );
+
+                        this.showMessage(
+                            "+50 XP"
+                        );
+                    }
+            }
+            }
+        }
     }
 
 
@@ -211,6 +321,7 @@ class Game {
 
         this.effects.draw(ctx);
 
+        this.drawEnemy(ctx);
 
         this.player.draw(ctx);
 
@@ -220,6 +331,98 @@ class Game {
 
         this.updateHUD();
 
+    }
+
+    drawEnemy(ctx) {
+
+    const enemy =
+        this.enemy;
+
+    if (!enemy.alive) {
+        return;
+    }
+
+    /*
+     * Тень
+     */
+    ctx.fillStyle =
+        "rgba(0,0,0,0.45)";
+
+    ctx.beginPath();
+
+    ctx.ellipse(
+        enemy.x,
+        enemy.y + 17,
+        19,
+        7,
+        0,
+        0,
+        Math.PI * 2
+    );
+
+    ctx.fill();
+
+    /*
+     * Тело
+     */
+    ctx.fillStyle =
+        enemy.hitTimer > 0
+            ? "#ffffff"
+            : "#8b2635";
+
+    ctx.fillRect(
+        enemy.x - 15,
+        enemy.y - 18,
+        30,
+        36
+    );
+
+    /*
+     * Голова
+     */
+    ctx.fillStyle =
+        "#5a1825";
+
+    ctx.beginPath();
+
+    ctx.arc(
+        enemy.x,
+        enemy.y - 22,
+        11,
+        0,
+        Math.PI * 2
+    );
+
+    ctx.fill();
+
+    /*
+     * HP bar
+     */
+    const barWidth = 42;
+
+    const hpPercent =
+        enemy.hp /
+        enemy.maxHp;
+
+    ctx.fillStyle =
+        "#111";
+
+    ctx.fillRect(
+        enemy.x - barWidth / 2,
+        enemy.y - 43,
+        barWidth,
+        5
+    );
+
+    ctx.fillStyle =
+        "#d33";
+
+    ctx.fillRect(
+        enemy.x - barWidth / 2,
+        enemy.y - 43,
+        barWidth * hpPercent,
+        5
+    );
     }
 
 
