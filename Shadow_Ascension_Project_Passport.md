@@ -1,5 +1,5 @@
 # SHADOW ASCENSION — ПАСПОРТ ПРОЕКТА
-Версия документа: 1.4
+Версия документа: 1.5
 Дата: 2026-09-02
 
 ## ГЛАВНАЯ ТОЧКА ВОЗВРАТА
@@ -14,7 +14,7 @@
 
 ## ТЕКУЩАЯ СТРУКТУРА
 Корень: `index.html`, `style.css`, `Shadow_Ascension_Project_Passport.md`
-JS: `camera.js`, `dungeon.js`, `effects.js`, `game.js`, `gameLoop.js`, `input.js`, `main.js`, `player.js`
+JS: `camera.js`, `dungeon.js`, `effects.js`, `enemy.js`, `game.js`, `gameLoop.js`, `input.js`, `main.js`, `player.js`
 Assets: `assets/player/player-down.svg`, `player-up.svg`, `player-side.svg`, `player-side-left.svg`
 
 ## РАБОТАЕТ
@@ -24,7 +24,12 @@ Assets: `assets/player/player-down.svg`, `player-up.svg`, `player-side.svg`, `pl
 - collision и безопасный spawn;
 - image-based directional player render с fallback;
 - aim и directional facing;
-- attack, dodge, invulnerability;
+- процедурная idle/walk анимация поверх directional assets;
+- attack/dodge visual states;
+- attack arc с динамическим sweep;
+- dodge ring с расширением;
+- attack hit particles;
+- floating damage numbers;
 - XP/level/HP;
 - анимированный portal;
 - этажи;
@@ -33,41 +38,47 @@ Assets: `assets/player/player-down.svg`, `player-up.svg`, `player-side.svg`, `pl
 - закрытые двери с collision;
 - убийство врага открывает следующую дверь;
 - в Room 3 убийство врага открывает портал;
-- combat hit particles.
+- отдельный `Enemy` class;
+- enemy chase AI с collision;
+- enemy melee attack;
+- enemy HP bar и hit flash;
+- enemy damage numbers;
+- player damage numbers.
 
-## ЭТАП 1.4 — ROOMS / DOORS / COMBAT FEEDBACK
+## ЭТАП 1.5 — PLAYER / ENEMY FOUNDATION
 Сделано:
-- dungeon разделён на 3 последовательные комнаты;
-- между комнатами физические двери;
-- закрытая дверь блокирует движение;
-- после убийства врага дверь соответствующей комнаты открывается;
-- переход через дверь переносит игрока в следующую комнату;
-- каждая комната получает нового тестового врага;
-- Room 3 после победы открывает portal;
-- HUD показывает `DUNGEON XX · ROOM X`;
-- добавлены hit particles при успешной атаке;
-- переход на новый этаж возвращает игрока в Room 1.
+- улучшена процедурная анимация движения игрока: bob, lean, step scale;
+- усилены состояния атаки и dodge;
+- добавлен динамический визуальный sweep атаки;
+- добавлены floating damage numbers;
+- создан `js/enemy.js`;
+- тестовый враг переведён из объекта внутри Game в отдельный `Enemy` class;
+- Enemy получил собственные HP, damage, speed, XP reward, cooldown и состояние жизни;
+- Enemy самостоятельно преследует игрока с проверкой dungeon collision;
+- Enemy атакует игрока в ближнем бою;
+- Enemy получил процедурный dark-fantasy визуал, hit flash и HP bar;
+- `index.html` подключает `enemy.js` до `game.js`;
+- `game.js` использует Enemy API и больше не содержит старый `drawEnemy()` prototype;
+- основной room/door/portal flow сохранён.
 
-## ВАЖНО
-Текущий враг всё ещё prototype object. Следующий архитектурный шаг — вынести его в `Enemy` class, чтобы затем без переделки Game добавить melee/ranged AI, разные типы, elite и boss.
+## АРХИТЕКТУРНОЕ ПРАВИЛО
+`Player` отвечает за игрока и его состояние. `Enemy` отвечает за собственное движение, атаку и получение урона. `Game` управляет сценой, комнатами, переходами и наградами. `Dungeon` отвечает за геометрию, collision, двери и portal. `Effects` отвечает за particles.
+
+Это позволяет дальше добавлять типы врагов, elite и boss без переписывания базового Game loop.
 
 ## СЛЕДУЮЩИЙ ПЛАН
-1. Player idle/walk animation frames.
-2. Attack/dodge visual states.
-3. Damage numbers и более сильный combat feedback.
-4. `js/enemy.js` с полноценным Enemy class.
-5. Enemy assets.
-6. AI и преследование игрока.
-7. Разные типы врагов.
-8. Elite.
-9. Boss.
-10. Loot/equipment.
-11. Death/restart/run result.
-12. Shadow Extraction.
-13. ARISE / shadow army.
+1. Добавить отдельные enemy SVG assets и перейти от procedural enemy render к asset pipeline.
+2. Сделать базовые enemy types: melee, fast, ranged.
+3. Добавить knockback / hit reaction и более выразительные death effects.
+4. Добавить Elite-врага с усиленными параметрами и отдельной полосой HP.
+5. Добавить Boss encounter в конце dungeon.
+6. После стабильного combat — loot/equipment.
+7. Death/restart/run result.
+8. Shadow Extraction.
+9. ARISE / shadow army.
 
 ## ПРИНЦИП
 Не останавливаться без весомой причины. Перед изменением структуры сверять фактические файлы. `main` не трогать. Ошибки исправлять до следующего слоя. После каждого существенного этапа обновлять паспорт.
 
 ## КОРОТКИЙ ПРОМПТ ДЛЯ НОВОЙ СЕССИИ
-«Бро, продолжаем Shadow Ascension. Работай в `shadow-ascension` репозитория MiniRPG. Прочитай паспорт, НЕ трогай `main`, сверяй реальные файлы. Не останавливайся без весомой причины — я сам остановлю. Продолжай с текущего состояния: player animation → combat feedback → Enemy class → enemy assets → AI → elite/boss → loot → shadows/ARISE.»
+«Бро, продолжаем Shadow Ascension. Работай в `shadow-ascension` репозитория MiniRPG. Прочитай паспорт, НЕ трогай `main`, сверяй реальные файлы. Не останавливайся без весомой причины — я сам остановлю. Текущее состояние: 3 комнаты/двери/portal, player asset pipeline + procedural animation, combat feedback, Enemy class + chase/melee AI. Следующий шаг — enemy assets → enemy types → hit/death feedback → elite → boss → loot → shadows/ARISE.»
