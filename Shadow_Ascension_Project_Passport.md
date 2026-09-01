@@ -1,155 +1,73 @@
 # SHADOW ASCENSION — ПАСПОРТ ПРОЕКТА
-Версия документа: 1.3
+Версия документа: 1.4
 Дата: 2026-09-02
 
-## 1. ГЛАВНАЯ ТОЧКА ВОЗВРАТА
+## ГЛАВНАЯ ТОЧКА ВОЗВРАТА
 Репозиторий: https://github.com/shironaki/MiniRPG
-Рабочая ветка новой игры: `shadow-ascension`
-Ветка `main`: старая рабочая MiniRPG — НЕ трогать.
+Рабочая ветка: `shadow-ascension`
+`main` — старая MiniRPG, НЕ трогать.
 
-## 2. КОНЦЕПЦИЯ
-Shadow Ascension — оригинальная браузерная action-RPG в духе Solo Leveling.
-Top-down управление и динамика вдохновлены удобством Soul Knight, но игра развивается как самостоятельный проект.
+## КОНЦЕПЦИЯ
+Оригинальная браузерная top-down action-RPG в тёмном fantasy-направлении. Цель: ПК, Android, iPhone, планшет.
 
-Главная фантазия игрока:
-войти в подземелье → сражаться → прокачиваться → получать добычу → побеждать сильных врагов → извлекать их тени → собирать собственную армию теней.
+Цикл: HUB → PORTAL → ROOM 1 → ROOM 2 → ROOM 3 → ELITE → BOSS → REWARD → HUB / NEXT DUNGEON.
 
-## 3. ПЛАТФОРМА
-HTML + CSS + JavaScript + Canvas.
-Цель: ПК, Android, iPhone и планшет через браузер.
-Позже при необходимости — PWA/APK.
+## ТЕКУЩАЯ СТРУКТУРА
+Корень: `index.html`, `style.css`, `Shadow_Ascension_Project_Passport.md`
+JS: `camera.js`, `dungeon.js`, `effects.js`, `game.js`, `gameLoop.js`, `input.js`, `main.js`, `player.js`
+Assets: `assets/player/player-down.svg`, `player-up.svg`, `player-side.svg`, `player-side-left.svg`
 
-## 4. ФАКТИЧЕСКАЯ СТРУКТУРА
-Корень:
-- `index.html`
-- `style.css`
-- `Shadow_Ascension_Project_Passport.md`
-
-`js/`:
-- `camera.js`
-- `dungeon.js`
-- `effects.js`
-- `game.js`
-- `gameLoop.js`
-- `input.js`
-- `main.js`
-- `player.js`
-
-`assets/player/`:
-- `player-down.svg`
-- `player-up.svg`
-- `player-side.svg`
-- `player-side-left.svg`
-
-Каталог assets теперь создан. PNG пока не обязателен: текущая архитектура уже умеет работать с отдельными SVG-ассетами и позже может быть переведена на PNG/WebP без изменения физики.
-
-## 5. УЖЕ РАБОТАЕТ
-- Canvas и игровой цикл;
-- HUD;
-- камера;
-- dungeon и столкновения;
-- безопасный spawn;
+## РАБОТАЕТ
+- Canvas/game loop/HUD/camera;
 - WASD/стрелки;
-- мобильный joystick движения;
-- aim joystick;
-- атака;
-- dodge с invulnerability;
-- XP / уровень / HP;
-- тестовый враг;
-- визуальный aim;
-- анимированный портал;
-- переход между этажами;
-- номер текущего dungeon;
-- отдельные directional player assets;
-- image-based player rendering с fallback во время загрузки.
+- мобильные movement/aim joystick;
+- collision и безопасный spawn;
+- image-based directional player render с fallback;
+- aim и directional facing;
+- attack, dodge, invulnerability;
+- XP/level/HP;
+- анимированный portal;
+- этажи;
+- room progression;
+- три dungeon rooms;
+- закрытые двери с collision;
+- убийство врага открывает следующую дверь;
+- в Room 3 убийство врага открывает портал;
+- combat hit particles.
 
-## 6. ЭТАП 1.1 — DUNGEON / PORTAL
+## ЭТАП 1.4 — ROOMS / DOORS / COMBAT FEEDBACK
 Сделано:
-- более выразительный тёмный пол;
-- объёмные стены;
-- фиолетовый анимированный портал;
-- `Dungeon.isNearPortal()`;
-- `Dungeon.update(dt)`;
-- переход через `Game.enterPortal()`;
-- новая генерация dungeon после портала;
-- безопасный spawn после перехода;
-- сброс тестового врага;
-- cooldown портала.
+- dungeon разделён на 3 последовательные комнаты;
+- между комнатами физические двери;
+- закрытая дверь блокирует движение;
+- после убийства врага дверь соответствующей комнаты открывается;
+- переход через дверь переносит игрока в следующую комнату;
+- каждая комната получает нового тестового врага;
+- Room 3 после победы открывает portal;
+- HUD показывает `DUNGEON XX · ROOM X`;
+- добавлены hit particles при успешной атаке;
+- переход на новый этаж возвращает игрока в Room 1.
 
-## 7. ЭТАП 1.2 — PLAYER VISUAL
-Сделано непосредственно в `js/player.js`:
-- убран простой прямоугольный визуал героя;
-- добавлен промежуточный тёмный fantasy-визуал;
-- чёрные растрёпанные волосы;
-- лицо и глаза;
-- фиолетовое свечение глаз;
-- shadow aura;
-- animation bob при движении;
-- визуальный след dodge;
-- усиленный визуал атаки;
-- физика движения, столкновения и боевые параметры сохранены.
+## ВАЖНО
+Текущий враг всё ещё prototype object. Следующий архитектурный шаг — вынести его в `Enemy` class, чтобы затем без переделки Game добавить melee/ranged AI, разные типы, elite и boss.
 
-## 8. ЭТАП 1.3 — PLAYER ASSET PIPELINE
-Сделано:
-- создан `assets/player/`;
-- добавлены отдельные SVG-ассеты, а не spritesheet;
-- реализованы направления `up/down/left/right`;
-- `Player` загружает ассеты через `Image()`;
-- направление определяется по текущему aim;
-- render героя теперь image-based;
-- collision body остаётся независимым от размера изображения;
-- добавлен безопасный Canvas fallback на случай задержки загрузки ассета;
-- attack arc и dodge feedback оставлены поверх изображения.
+## СЛЕДУЮЩИЙ ПЛАН
+1. Player idle/walk animation frames.
+2. Attack/dodge visual states.
+3. Damage numbers и более сильный combat feedback.
+4. `js/enemy.js` с полноценным Enemy class.
+5. Enemy assets.
+6. AI и преследование игрока.
+7. Разные типы врагов.
+8. Elite.
+9. Boss.
+10. Loot/equipment.
+11. Death/restart/run result.
+12. Shadow Extraction.
+13. ARISE / shadow army.
 
-Важно: это первый рабочий asset pipeline. В дальнейшем SVG можно заменить на подготовленные PNG/WebP, не меняя систему физики и управления.
+## ПРИНЦИП
+Не останавливаться без весомой причины. Перед изменением структуры сверять фактические файлы. `main` не трогать. Ошибки исправлять до следующего слоя. После каждого существенного этапа обновлять паспорт.
 
-## 9. СЛЕДУЮЩАЯ РАБОТА
-1. Добавить полноценные frame-анимации idle/walk для каждого направления.
-2. Добавить отдельные attack/dodge frames.
-3. Добавить player portrait/UI asset.
-4. Сделать полноценный combat feedback: hit flash, damage numbers, particles.
-5. Разделить dungeon на комнаты.
-6. Добавить двери и условия открытия.
-7. Создать полноценный Enemy class.
-8. Перевести врага с примитива на отдельный asset.
-9. Добавить AI, разные типы врагов, elite и boss.
-10. Добавить loot/equipment.
-11. Добавить смерть/рестарт/результат забега.
-12. Затем — Shadow Extraction и ARISE.
-
-## 10. ЦИКЛ ИГРЫ
-HUB
-↓
-PORTAL
-↓
-DUNGEON ROOM 1
-↓
-ROOM 2
-↓
-ROOM 3
-↓
-ELITE
-↓
-BOSS
-↓
-REWARD
-↓
-PORTAL
-↓
-HUB / NEXT DUNGEON
-
-## 11. ПРИНЦИП РАЗРАБОТКИ
-Работать небольшими проверяемыми группами, но не останавливаться без весомой причины.
-Пользователь проверяет готовый этап на GitHub Pages.
-Перед изменением структуры всегда сверять фактические файлы.
-`main` не трогать.
-Если появляется ошибка — сначала исправлять её.
-После каждого существенного этапа обновлять этот паспорт.
-
-## 12. СОСТОЯНИЕ НА 2026-09-02
-Последние изменения выполняются непосредственно в `shadow-ascension`.
-Сделан переход от Canvas-примитива героя к отдельным directional assets. Текущая физика и управление сохранены.
-Следующая крупная цель — полноценная анимационная система игрока и затем переход к комнатам/дверям и нормальному Enemy class.
-
-## 13. КОРОТКИЙ ПРОМПТ ДЛЯ НОВОЙ СЕССИИ
-«Бро, продолжаем Shadow Ascension. Работай непосредственно в ветке `shadow-ascension` репозитория MiniRPG. Прочитай `Shadow_Ascension_Project_Passport.md`, сверяй фактическую структуру и НЕ трогай `main`. Не останавливайся без весомой причины — я сам остановлю. После каждого существенного этапа обновляй паспорт. Текущий приоритет: player animation → attack/dodge frames → combat feedback → комнаты/двери → Enemy class → enemy assets → AI → elite/boss → loot → shadows/ARISE.»
+## КОРОТКИЙ ПРОМПТ ДЛЯ НОВОЙ СЕССИИ
+«Бро, продолжаем Shadow Ascension. Работай в `shadow-ascension` репозитория MiniRPG. Прочитай паспорт, НЕ трогай `main`, сверяй реальные файлы. Не останавливайся без весомой причины — я сам остановлю. Продолжай с текущего состояния: player animation → combat feedback → Enemy class → enemy assets → AI → elite/boss → loot → shadows/ARISE.»
