@@ -10,6 +10,7 @@ class Game {
         this.floor = 1;
         this.portalCooldown = 0;
         this.roomTransitionCooldown = 0;
+        this.damageNumbers = [];
 
         const spawn = this.dungeon.getSpawnPoint(28, 36, this.roomIndex);
         this.player = new Player(spawn.x, spawn.y);
@@ -27,7 +28,7 @@ class Game {
         const room = this.dungeon.rooms[this.roomIndex];
         const x = (room.x + room.width / 2) * this.dungeon.tileSize;
         const y = 8 * this.dungeon.tileSize;
-        this.enemy = { x, y, width: 30, height: 36, maxHp: 60, hp: 60, xpReward: 50, hitTimer: 0, alive: true };
+        this.enemy = new Enemy(x, y, { maxHp: 60, xpReward: 50, speed: 72, damage: 8 });
     }
 
     start() { this.loop.start(); }
@@ -49,6 +50,7 @@ class Game {
 
         this.player.update(dt, this.input, this.dungeon, this.camera);
         this.updateEnemy(dt);
+        this.updateDamageNumbers(dt);
 
         if (this.roomTransitionCooldown <= 0) {
             const nextRoom = this.dungeon.getDoorTransition(this.player.x, this.player.y, this.roomIndex);
@@ -100,23 +102,21 @@ class Game {
     }
 
     updateEnemy(dt) {
-        if (!this.enemy.alive) return;
-        this.enemy.hitTimer = Math.max(0, this.enemy.hitTimer - dt);
+        if (!this.enemy || !this.enemy.alive) return;
+
+        this.enemy.update(dt, this.player, this.dungeon);
 
         if (this.player.attackTimer > 0 && this.player.attackTimer >= this.player.attackDuration - 0.05 && this.enemy.hitTimer <= 0) {
             const dx = this.enemy.x - this.player.x;
             const dy = this.enemy.y - this.player.y;
             const distance = Math.hypot(dx, dy);
-            if (distance <= 55) {
+            if (distance <= 58) {
                 const length = Math.max(distance, 0.001);
                 const dot = (dx / length) * this.player.aimX + (dy / length) * this.player.aimY;
                 if (dot > 0.25) {
-                    this.enemy.hp -= this.player.attackPower;
+                    const killed = this.enemy.takeDamage(this.player.attackPower, this.effects);
                     this.enemy.hitTimer = 0.18;
-                    this.effects.spawnHit(this.enemy.x, this.enemy.y, 4);
-                    if (this.enemy.hp <= 0) {
-                        this.enemy.hp = 0;
-                        this.enemy.alive = false;
+                    if (killed) {
                         this.player.gainXP(this.enemy.xpReward);
                         this.dungeon.setRoomProgress(this.roomIndex, true);
                         this.showMessage(this.roomIndex === 2 ? "PORTAL UNLOCKED" : "+50 XP — DOOR OPEN");
@@ -124,6 +124,34 @@ class Game {
                 }
             }
         }
+    }
+
+    addDamageNumber(x, y, amount, playerDamage = false) {
+        this.damageNumbers.push({ x, y, amount, playerDamage, life: 0.7, maxLife: 0.7, vy: -32 });
+    }
+
+    updateDamageNumbers(dt) {
+        for (let i = this.damageNumbers.length - 1; i >= 0; i--) {
+            const n = this.damageNumbers[i];
+            n.y += n.vy * dt;
+            n.vy *= Math.pow(0.05, dt);
+            n.life -= dt;
+            if (n.life <= 0) this.damageNumbers.splice(i, 1);
+        }
+    }
+
+    drawDamageNumbers(ctx) {
+        ctx.save();
+        ctx.textAlign = "center";
+        ctx.font = "bold 15px Arial";
+        for (const n of this.damageNumbers) {
+            ctx.globalAlpha = Math.min(1, n.life / 0.25);
+            ctx.fillStyle = n.playerDamage ? "#ff6b6b" : "#f1d4ff";
+            ctx.shadowBlur = 8;
+            ctx.shadowColor = n.playerDamage ? "#ff3344" : "#9a63ff";
+            ctx.fillText(`-${n.amount}`, n.x, n.y);
+        }
+        ctx.restore();
     }
 
     render() {
@@ -136,24 +164,11 @@ class Game {
         ctx.translate(-this.camera.x, -this.camera.y);
         this.dungeon.draw(ctx, this.camera);
         this.effects.draw(ctx);
-        this.drawEnemy(ctx);
+        this.enemy.draw(ctx);
         this.player.draw(ctx);
+        this.drawDamageNumbers(ctx);
         ctx.restore();
         this.updateHUD();
-    }
-
-    drawEnemy(ctx) {
-        if (!this.enemy.alive) return;
-        const e = this.enemy;
-        ctx.fillStyle = "rgba(0,0,0,0.45)";
-        ctx.beginPath(); ctx.ellipse(e.x, e.y + 17, 19, 7, 0, 0, Math.PI * 2); ctx.fill();
-        ctx.fillStyle = e.hitTimer > 0 ? "#ffffff" : "#8b2635";
-        ctx.fillRect(e.x - 15, e.y - 18, 30, 36);
-        ctx.fillStyle = "#5a1825";
-        ctx.beginPath(); ctx.arc(e.x, e.y - 22, 11, 0, Math.PI * 2); ctx.fill();
-        const hpPercent = e.hp / e.maxHp;
-        ctx.fillStyle = "#111"; ctx.fillRect(e.x - 21, e.y - 43, 42, 5);
-        ctx.fillStyle = "#d33"; ctx.fillRect(e.x - 21, e.y - 43, 42 * hpPercent, 5);
     }
 
     updateHUD() {
