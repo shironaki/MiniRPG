@@ -1,5 +1,6 @@
 using System.Collections.Generic;
 using UnityEngine;
+using ShadowAscension.Enemies;
 
 namespace ShadowAscension.Combat
 {
@@ -15,7 +16,6 @@ namespace ShadowAscension.Combat
             public float cooldown;
         }
 
-        [SerializeField] private LayerMask enemyMask;
         [SerializeField] private SkillSlot[] skills =
         {
             new SkillSlot { id = "ShadowSlash", key = KeyCode.Q, damage = 80, radius = 1.8f, cooldown = 2f },
@@ -28,25 +28,31 @@ namespace ShadowAscension.Combat
 
         private void Update()
         {
-            foreach (var skill in skills)
+            if (skills == null) return;
+            foreach (SkillSlot skill in skills)
                 if (Input.GetKeyDown(skill.key)) Cast(skill.id);
         }
 
         public bool Cast(string id)
         {
+            if (string.IsNullOrWhiteSpace(id) || skills == null) return false;
+
             for (int i = 0; i < skills.Length; i++)
             {
-                if (skills[i].id != id) continue;
+                SkillSlot skill = skills[i];
+                if (skill.id != id) continue;
                 if (cooldowns.TryGetValue(id, out float readyAt) && Time.time < readyAt) return false;
 
-                Collider2D[] hits = Physics2D.OverlapCircleAll(transform.position, skills[i].radius, enemyMask);
+                Collider2D[] hits = Physics2D.OverlapCircleAll(transform.position, Mathf.Max(0.1f, skill.radius));
                 foreach (Collider2D hit in hits)
                 {
-                    Damageable target = hit.GetComponentInParent<Damageable>();
-                    if (target != null && !target.IsDead) target.TakeDamage(skills[i].damage);
+                    EnemyBase enemy = hit.GetComponentInParent<EnemyBase>();
+                    if (enemy == null) continue;
+                    Damageable target = enemy.GetComponent<Damageable>();
+                    if (target != null && !target.IsDead) target.TakeDamage(Mathf.Max(0, skill.damage));
                 }
 
-                cooldowns[id] = Time.time + skills[i].cooldown;
+                cooldowns[id] = Time.time + Mathf.Max(0f, skill.cooldown);
                 return true;
             }
             return false;
