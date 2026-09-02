@@ -19,16 +19,40 @@ namespace ShadowAscension.Core
 
         public static void Save(SaveData data)
         {
-            File.WriteAllText(Path, JsonUtility.ToJson(data, true));
+            if (data == null) return;
+            Validate(data);
+            try
+            {
+                File.WriteAllText(Path, JsonUtility.ToJson(data, true));
+            }
+            catch (IOException) { }
+            catch (System.UnauthorizedAccessException) { }
         }
 
         public static SaveData Load()
         {
             if (!File.Exists(Path)) return new SaveData();
-            try { return JsonUtility.FromJson<SaveData>(File.ReadAllText(Path)) ?? new SaveData(); }
-            catch { return new SaveData(); }
+            try
+            {
+                SaveData data = JsonUtility.FromJson<SaveData>(File.ReadAllText(Path)) ?? new SaveData();
+                Validate(data);
+                return data;
+            }
+            catch
+            {
+                return new SaveData();
+            }
         }
 
         public static bool Exists() => File.Exists(Path);
+
+        private static void Validate(SaveData data)
+        {
+            data.level = Mathf.Clamp(data.level, 1, 9999);
+            data.hp = Mathf.Clamp(data.hp, 0, 1000000);
+            data.mp = Mathf.Clamp(data.mp, 0, 1000000);
+            data.gold = Mathf.Clamp(data.gold, 0, 2000000000);
+            data.floor = Mathf.Clamp(data.floor, 1, 9999);
+        }
     }
 }
