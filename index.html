@@ -22,6 +22,7 @@
 <section class="inventory panel" id="inventory"><header><b>ИНВЕНТАРЬ</b><button id="closeInventory">×</button></header><div class="tabs"><b>Все</b><span>Экипировка</span><span>Расходники</span><span>Материалы</span></div><div class="invGrid" id="invGrid"></div><footer>18 / 60 <i></i></footer></section>
 <section class="boss panel" id="bossPanel"><div class="bossAvatar">☠</div><div><b>Тёмный Рыцарь</b><span>Lv. 28</span><div class="bossBar"><i id="bossHp"></i></div><small id="bossHpText">5120 / 5120</small></div></section>
 <div id="centerMessage"></div>
+<div id="enemyCount" style="display:none"></div>
 <section class="skills"><div class="skill" data-skill="Q" onclick="window.SA_SKILL&&SA_SKILL('Q')"><b>Q</b><span>✦</span><em class="cd"></em></div><div class="skill" data-skill="E" onclick="window.SA_SKILL&&SA_SKILL('E')"><b>E</b><span>◈</span><em class="cd"></em></div><div class="skill" data-skill="R" onclick="window.SA_SKILL&&SA_SKILL('R')"><b>R</b><span>✹</span><em class="cd"></em></div><div class="skill" data-skill="F" onclick="window.SA_SKILL&&SA_SKILL('F')"><b>F</b><span>➤</span><em class="cd"></em></div><button class="space" onclick="window.SA_DODGE&&SA_DODGE()">SPACE</button></section>
 <div class="mobile"><div id="movePad">◉</div><div id="aimPad">◉</div><button onclick="window.SA_FIRE&&SA_FIRE()">⚔</button></div><div class="help">WASD — движение &nbsp; ЛКМ — атака &nbsp; SPACE — рывок &nbsp; Q / E / R / F — навыки</div>
 <script>
