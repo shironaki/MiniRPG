@@ -1,3 +1,4 @@
+using System;
 using UnityEngine;
 
 namespace ShadowAscension.Combat
@@ -8,6 +9,9 @@ namespace ShadowAscension.Combat
         public int MaxHealth => maxHealth;
         public int CurrentHealth { get; private set; }
         public bool IsDead => CurrentHealth <= 0;
+
+        public event Action<int> Damaged;
+        public event Action Died;
 
         private void Awake() => CurrentHealth = maxHealth;
 
@@ -20,8 +24,15 @@ namespace ShadowAscension.Combat
         public bool TakeDamage(int amount)
         {
             if (IsDead) return false;
-            CurrentHealth = Mathf.Max(0, CurrentHealth - Mathf.Max(0, amount));
-            if (CurrentHealth == 0) Die();
+            int safeAmount = Mathf.Max(0, amount);
+            if (safeAmount == 0) return false;
+            CurrentHealth = Mathf.Max(0, CurrentHealth - safeAmount);
+            Damaged?.Invoke(safeAmount);
+            if (CurrentHealth == 0)
+            {
+                Died?.Invoke();
+                Die();
+            }
             return true;
         }
 
