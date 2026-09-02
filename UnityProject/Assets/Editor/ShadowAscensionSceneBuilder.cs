@@ -106,6 +106,7 @@ namespace ShadowAscension.Editor
 
             Damageable damageable = enemy.AddComponent<Damageable>();
             SetSerializedInt(damageable, "maxHealth", health);
+            enemy.AddComponent<EnemyRewards>();
             enemy.AddComponent(enemyType);
         }
 
@@ -152,7 +153,7 @@ namespace ShadowAscension.Editor
         {
             SpriteRenderer renderer = CreateTiledSprite(name, position, size, "wall", 5);
             BoxCollider2D collider = renderer.gameObject.AddComponent<BoxCollider2D>();
-            collider.size = Vector2.one;
+            collider.size = size;
         }
 
         private static void SetSerializedInt(Object target, string propertyName, int value)
