@@ -9,18 +9,12 @@
 <script src="https://cdn.jsdelivr.net/npm/phaser@3.90.0/dist/phaser.min.js"></script>
 </head>
 <body>
+<div id="bootError" style="display:none;position:fixed;inset:0;z-index:999;background:#05030b;color:#fff;padding:24px;font:14px Arial;white-space:pre-wrap;overflow:auto"><b>SHADOW ASCENSION — ENGINE ERROR</b><br><br><span id="bootErrorText"></span></div>
 <div id="game"></div>
 <div id="vignette"></div>
 <header class="topbar">
-  <section class="heroCard panel">
-    <div class="portrait">☾</div><div class="heroData"><div class="heroName">SHADOW HUNTER <b>Lv. <span id="levelValue">32</span></b></div>
-      <div class="statLine hp"><i id="hpFill"></i></div><div class="statText">HP <span id="hpText">4820 / 4820</span></div>
-      <div class="statLine mp"><i id="mpFill"></i></div><div class="statText">MP <span id="mpText">1240 / 1240</span></div>
-      <div class="statLine xp"><i id="xpFill"></i></div>
-    </div>
-  </section>
-  <div class="brand">✦ <span>SHADOW ASCENSION</span> ✦</div>
-  <section class="resources panel"><span>🪙 <b id="goldValue">328 450</b></span><span>◆ <b id="gemValue">1 240</b></span><span>✦ <b id="essenceValue">56</b></span></section>
+  <section class="heroCard panel"><div class="portrait">☾</div><div class="heroData"><div class="heroName">SHADOW HUNTER <b>Lv. <span id="levelValue">32</span></b></div><div class="statLine hp"><i id="hpFill"></i></div><div class="statText">HP <span id="hpText">4820 / 4820</span></div><div class="statLine mp"><i id="mpFill"></i></div><div class="statText">MP <span id="mpText">1240 / 1240</span></div><div class="statLine xp"><i id="xpFill"></i></div></div></section>
+  <div class="brand">✦ <span>SHADOW ASCENSION</span> ✦</div><section class="resources panel"><span>🪙 <b id="goldValue">328 450</b></span><span>◆ <b id="gemValue">1 240</b></span><span>✦ <b id="essenceValue">56</b></span></section>
 </header>
 <div class="rightTop"><div class="miniMap panel"><b id="floorValue">Подземелье Теней · Этаж 1</b><div class="map"><em></em><i></i><strong></strong></div></div><nav class="icons"><button>☰<small>Квесты</small></button><button id="inventoryBtn">▣<small>Инвентарь</small></button><button id="skillsBtn">✦<small>Навыки</small></button><button>◈<small>Тени</small></button><button>⌖<small>Карта</small></button><button id="settingsBtn">⚙<small>Настройки</small></button></nav></div>
 <section class="quests panel"><h3>◈ АКТИВНЫЕ КВЕСТЫ</h3><div>☀ <b>Путь Теней</b><small>Победить 20 врагов <strong id="questKills">12/20</strong></small></div><div>✦ <b>Тайна портала</b><small>Найти древний кристалл <strong id="questCrystal">0/1</strong></small></div><div>✧ <b>Испытание Тени</b><small>Призвать 5 Теней <strong id="questSummon">3/5</strong></small></div></section>
@@ -28,9 +22,12 @@
 <section class="inventory panel" id="inventory"><header><b>ИНВЕНТАРЬ</b><button id="closeInventory">×</button></header><div class="tabs"><b>Все</b><span>Экипировка</span><span>Расходники</span><span>Материалы</span></div><div class="invGrid" id="invGrid"></div><footer>18 / 60 <i></i></footer></section>
 <section class="boss panel" id="bossPanel"><div class="bossAvatar">☠</div><div><b>Тёмный Рыцарь</b><span>Lv. 28</span><div class="bossBar"><i id="bossHp"></i></div><small id="bossHpText">5120 / 5120</small></div></section>
 <div id="centerMessage"></div>
-<section class="skills"><div class="skill" data-skill="Q" onclick="SA_SKILL('Q')"><b>Q</b><span>✦</span><em class="cd"></em></div><div class="skill" data-skill="E" onclick="SA_SKILL('E')"><b>E</b><span>◈</span><em class="cd"></em></div><div class="skill" data-skill="R" onclick="SA_SKILL('R')"><b>R</b><span>✹</span><em class="cd"></em></div><div class="skill" data-skill="F" onclick="SA_SKILL('F')"><b>F</b><span>➤</span><em class="cd"></em></div><button class="space" onclick="SA_DODGE()">SPACE</button></section>
-<div class="mobile"><div id="movePad">◉</div><div id="aimPad">◉</div><button onclick="SA_FIRE()">⚔</button></div>
-<div class="help">WASD — движение &nbsp; ЛКМ — атака &nbsp; SPACE — рывок &nbsp; Q / E / R / F — навыки</div>
+<section class="skills"><div class="skill" data-skill="Q" onclick="window.SA_SKILL&&SA_SKILL('Q')"><b>Q</b><span>✦</span><em class="cd"></em></div><div class="skill" data-skill="E" onclick="window.SA_SKILL&&SA_SKILL('E')"><b>E</b><span>◈</span><em class="cd"></em></div><div class="skill" data-skill="R" onclick="window.SA_SKILL&&SA_SKILL('R')"><b>R</b><span>✹</span><em class="cd"></em></div><div class="skill" data-skill="F" onclick="window.SA_SKILL&&SA_SKILL('F')"><b>F</b><span>➤</span><em class="cd"></em></div><button class="space" onclick="window.SA_DODGE&&SA_DODGE()">SPACE</button></section>
+<div class="mobile"><div id="movePad">◉</div><div id="aimPad">◉</div><button onclick="window.SA_FIRE&&SA_FIRE()">⚔</button></div><div class="help">WASD — движение &nbsp; ЛКМ — атака &nbsp; SPACE — рывок &nbsp; Q / E / R / F — навыки</div>
+<script>
+window.addEventListener('error',function(e){var b=document.getElementById('bootError'),t=document.getElementById('bootErrorText');if(b&&t){b.style.display='block';t.textContent=(e.message||'Unknown error')+'\n'+(e.filename||'')+':'+(e.lineno||'');}});
+window.addEventListener('unhandledrejection',function(e){var b=document.getElementById('bootError'),t=document.getElementById('bootErrorText');if(b&&t){b.style.display='block';t.textContent='Unhandled promise rejection: '+e.reason;}});
+</script>
 <script src="js/shadow-engine.js"></script>
 </body>
 </html>
