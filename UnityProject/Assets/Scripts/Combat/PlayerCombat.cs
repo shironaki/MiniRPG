@@ -56,6 +56,7 @@ namespace ShadowAscension.Combat
         {
             if (Time.time < nextAttackTime) return;
             nextAttackTime = Time.time + Mathf.Max(0.05f, attackCooldown);
+            CombatFeedback.Slash(transform.position, facingDirection, attackRange, attackArc);
 
             float halfArc = attackArc * 0.5f;
             float minDot = Mathf.Cos(halfArc * Mathf.Deg2Rad);
@@ -72,7 +73,8 @@ namespace ShadowAscension.Combat
                 if (Vector2.Dot(facingDirection, toEnemy.normalized) < minDot) continue;
 
                 Damageable target = enemy.GetComponent<Damageable>();
-                if (target != null && !target.IsDead) target.TakeDamage(damage);
+                if (target != null && !target.IsDead && target.TakeDamage(damage))
+                    CombatFeedback.Hit(enemy.transform.position, damage);
             }
         }
 
