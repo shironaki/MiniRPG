@@ -1,5 +1,6 @@
 using UnityEngine;
 using ShadowAscension.Combat;
+using ShadowAscension.Player;
 
 namespace ShadowAscension.Enemies
 {
@@ -33,7 +34,7 @@ namespace ShadowAscension.Enemies
 
         protected virtual void FixedUpdate()
         {
-            if (Target == null || Health.IsDead)
+            if (Target == null || Health == null || Health.IsDead)
             {
                 Body.linearVelocity = Vector2.zero;
                 return;
@@ -41,16 +42,18 @@ namespace ShadowAscension.Enemies
 
             Vector2 delta = (Vector2)Target.position - Body.position;
             float distance = delta.magnitude;
+            float safeChaseRange = Mathf.Max(0f, chaseRange);
+            float safeAttackRange = Mathf.Max(0.1f, attackRange);
 
-            if (distance > chaseRange)
+            if (distance > safeChaseRange)
             {
                 Body.linearVelocity = Vector2.zero;
                 return;
             }
 
-            if (distance > attackRange)
+            if (distance > safeAttackRange)
             {
-                Body.linearVelocity = delta.normalized * moveSpeed;
+                Body.linearVelocity = delta.normalized * Mathf.Max(0f, moveSpeed);
             }
             else
             {
@@ -61,10 +64,11 @@ namespace ShadowAscension.Enemies
 
         protected virtual void TryAttack()
         {
-            if (Time.time < nextAttackTime) return;
-            nextAttackTime = Time.time + attackCooldown;
-            Damageable targetHealth = Target != null ? Target.GetComponentInParent<Damageable>() : null;
-            if (targetHealth != null) targetHealth.TakeDamage(contactDamage);
+            if (Target == null || Time.time < nextAttackTime) return;
+            nextAttackTime = Time.time + Mathf.Max(0.05f, attackCooldown);
+
+            PlayerStats stats = Target.GetComponentInParent<PlayerStats>();
+            if (stats != null) stats.TakeDamage(Mathf.Max(0, contactDamage));
         }
 
         protected virtual void OnDeath()
