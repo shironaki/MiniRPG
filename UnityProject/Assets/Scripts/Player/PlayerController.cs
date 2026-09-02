@@ -13,6 +13,9 @@ namespace ShadowAscension.Player
         private Vector2 moveInput;
         private float dodgeTimer;
         private Vector2 dodgeDirection;
+        private Vector2 facingDirection = Vector2.up;
+
+        public Vector2 FacingDirection => facingDirection;
 
         private void Awake()
         {
@@ -24,6 +27,9 @@ namespace ShadowAscension.Player
         private void Update()
         {
             moveInput = new Vector2(Input.GetAxisRaw("Horizontal"), Input.GetAxisRaw("Vertical")).normalized;
+
+            if (moveInput.sqrMagnitude > 0.01f)
+                facingDirection = moveInput;
 
             if (Input.GetKeyDown(KeyCode.Space) && dodgeTimer <= 0f && moveInput.sqrMagnitude > 0.01f)
             {
