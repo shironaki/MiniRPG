@@ -1,5 +1,6 @@
 using UnityEngine;
 using ShadowAscension.Player;
+using ShadowAscension.Enemies;
 
 namespace ShadowAscension.Combat
 {
@@ -9,7 +10,6 @@ namespace ShadowAscension.Combat
         [SerializeField] private int attackDamage = 25;
         [SerializeField] private float attackRange = 1.35f;
         [SerializeField] private float attackCooldown = 0.35f;
-        [SerializeField] private LayerMask enemyMask;
 
         private float nextAttackTime;
         private PlayerStats stats;
@@ -24,22 +24,20 @@ namespace ShadowAscension.Combat
         public void Attack()
         {
             if (Time.time < nextAttackTime) return;
-            nextAttackTime = Time.time + attackCooldown;
+            nextAttackTime = Time.time + Mathf.Max(0.05f, attackCooldown);
 
-            Vector2 center = transform.position;
-            Collider2D[] hits = Physics2D.OverlapCircleAll(center, attackRange, enemyMask);
+            Collider2D[] hits = Physics2D.OverlapCircleAll(transform.position, Mathf.Max(0.1f, attackRange));
             int damage = Mathf.Max(1, attackDamage + stats.Attack);
 
             foreach (Collider2D hit in hits)
             {
-                Damageable target = hit.GetComponentInParent<Damageable>();
+                EnemyBase enemy = hit.GetComponentInParent<EnemyBase>();
+                if (enemy == null) continue;
+                Damageable target = enemy.GetComponent<Damageable>();
                 if (target != null && !target.IsDead) target.TakeDamage(damage);
             }
         }
 
-        private void OnDrawGizmosSelected()
-        {
-            Gizmos.DrawWireSphere(transform.position, attackRange);
-        }
+        private void OnDrawGizmosSelected() => Gizmos.DrawWireSphere(transform.position, attackRange);
     }
 }
