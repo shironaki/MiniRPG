@@ -148,7 +148,7 @@ class Player {
             const drawWidth = 76 * stepScale;
             const drawHeight = 89 * stepScale;
             ctx.save();
-            ctx.translate(x, y + bob);
+            ctx.translate(x, y + walkBob);
             ctx.rotate(walkLean);
             ctx.drawImage(sprite, -drawWidth / 2, -52 - drawHeight * 0.02, drawWidth, drawHeight);
             ctx.restore();
