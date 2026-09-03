@@ -59,35 +59,30 @@ namespace ShadowAscension.Combat
 
         private IEnumerator HitRoutine(Vector2 position, int damage, bool critical)
         {
+            // Deliberately avoid runtime ParticleSystem creation here. Unity 6 can
+            // start a newly added particle system before its main module is configured,
+            // which produces the duration-while-playing warning on some editor builds.
             GameObject go = new GameObject("HitFeedback");
-            ParticleSystem ps = go.AddComponent<ParticleSystem>();
+            int rayCount = critical ? 10 : 7;
+            float length = critical ? 0.62f : 0.42f;
 
-            // A newly added ParticleSystem can begin playing immediately.
-            // Configure it while stopped to avoid Unity's runtime duration warning.
-            var main = ps.main;
-            main.playOnAwake = false;
-            main.loop = false;
-            main.duration = 0.16f;
-            main.startLifetime = 0.16f;
-            main.startSpeed = critical ? 4.5f : 3.2f;
-            main.startSize = critical ? 0.13f : 0.09f;
-            main.maxParticles = 20;
-
-            var emission = ps.emission;
-            emission.rateOverTime = 0f;
-            emission.SetBursts(new[] { new ParticleSystem.Burst(0f, critical ? 14u : 8u) });
-
-            var shape = ps.shape;
-            shape.shapeType = ParticleSystemShapeType.Circle;
-            shape.radius = 0.08f;
-
-            go.transform.position = position;
-            ps.Play();
+            for (int i = 0; i < rayCount; i++)
+            {
+                LineRenderer ray = go.AddComponent<LineRenderer>();
+                ray.positionCount = 2;
+                ray.useWorldSpace = true;
+                ray.widthMultiplier = critical ? 0.055f : 0.04f;
+                ray.numCapVertices = 2;
+                float angle = (360f * i / rayCount) * Mathf.Deg2Rad;
+                Vector2 direction = new Vector2(Mathf.Cos(angle), Mathf.Sin(angle));
+                ray.SetPosition(0, position);
+                ray.SetPosition(1, position + direction * length);
+            }
 
             DamageNumber number = go.AddComponent<DamageNumber>();
             number.Initialize(damage, critical);
 
-            yield return new WaitForSeconds(0.45f);
+            yield return new WaitForSeconds(0.16f);
             if (go != null) Destroy(go);
         }
 
