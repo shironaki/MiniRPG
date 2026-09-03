@@ -54,31 +54,39 @@ namespace ShadowAscension.Combat
             }
 
             yield return new WaitForSeconds(0.09f);
-            Destroy(go);
+            if (go != null) Destroy(go);
         }
 
         private IEnumerator HitRoutine(Vector2 position, int damage, bool critical)
         {
             GameObject go = new GameObject("HitFeedback");
             ParticleSystem ps = go.AddComponent<ParticleSystem>();
+
+            // A newly added ParticleSystem can begin playing immediately.
+            // Configure it while stopped to avoid Unity's runtime duration warning.
             var main = ps.main;
+            main.playOnAwake = false;
             main.loop = false;
             main.duration = 0.16f;
             main.startLifetime = 0.16f;
             main.startSpeed = critical ? 4.5f : 3.2f;
             main.startSize = critical ? 0.13f : 0.09f;
             main.maxParticles = 20;
+
             var emission = ps.emission;
             emission.rateOverTime = 0f;
             emission.SetBursts(new[] { new ParticleSystem.Burst(0f, critical ? 14u : 8u) });
+
             var shape = ps.shape;
             shape.shapeType = ParticleSystemShapeType.Circle;
             shape.radius = 0.08f;
+
             go.transform.position = position;
             ps.Play();
 
             DamageNumber number = go.AddComponent<DamageNumber>();
             number.Initialize(damage, critical);
+
             yield return new WaitForSeconds(0.45f);
             if (go != null) Destroy(go);
         }
