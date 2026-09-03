@@ -1,65 +1,63 @@
 using UnityEngine;
+using ShadowAscension.Input;
 using ShadowAscension.Player;
 using ShadowAscension.Enemies;
 
 namespace ShadowAscension.Combat
 {
-    [RequireComponent(typeof(PlayerStats))]
+    [RequireComponent(typeof(PlayerStats), typeof(PlayerInputRouter))]
     public sealed class PlayerCombat : MonoBehaviour
     {
+        [Header("Basic Attack")]
         [SerializeField] private int attackDamage = 25;
-        [SerializeField] private float attackRange = 1.45f;
-        [SerializeField, Range(30f, 180f)] private float attackArc = 110f;
-        [SerializeField] private float attackCooldown = 0.35f;
+        [SerializeField] private float attackRange = 1.55f;
+        [SerializeField, Range(30f, 180f)] private float attackArc = 115f;
+        [SerializeField] private float attackCooldown = 0.28f;
 
         private float nextAttackTime;
         private PlayerStats stats;
+        private PlayerInputRouter input;
         private PlayerController controller;
-        private Vector2 facingDirection = Vector2.up;
-        private Vector3 lastMousePosition;
+        private Vector2 facingDirection = Vector2.down;
 
         public Vector2 FacingDirection => facingDirection;
+        public bool IsAttacking { get; private set; }
 
         private void Awake()
         {
             stats = GetComponent<PlayerStats>();
+            input = GetComponent<PlayerInputRouter>();
             controller = GetComponent<PlayerController>();
         }
 
         private void Update()
         {
             UpdateAim();
-            if (Input.GetMouseButtonDown(0) || Input.GetKeyDown(KeyCode.J)) Attack();
+            if (input.ConsumeAttack()) Attack();
         }
 
         private void UpdateAim()
         {
-            bool mouseMoved = Input.mousePresent && (Input.mousePosition - lastMousePosition).sqrMagnitude > 1f;
-            if (mouseMoved && Camera.main != null)
-            {
-                Vector3 screen = Input.mousePosition;
-                screen.z = Mathf.Abs(Camera.main.transform.position.z - transform.position.z);
-                Vector3 world = Camera.main.ScreenToWorldPoint(screen);
-                Vector2 direction = (Vector2)(world - transform.position);
-                if (direction.sqrMagnitude > 0.04f) facingDirection = direction.normalized;
-                lastMousePosition = Input.mousePosition;
-            }
+            Vector2 aim = input.Aim;
+            if (aim.sqrMagnitude > 0.04f)
+                facingDirection = aim.normalized;
             else if (controller != null && controller.FacingDirection.sqrMagnitude > 0.04f)
-            {
-                facingDirection = controller.FacingDirection;
-            }
+                facingDirection = controller.FacingDirection.normalized;
 
             transform.up = facingDirection;
         }
 
         public void Attack()
         {
-            if (Time.time < nextAttackTime) return;
+            if (Time.time < nextAttackTime || stats == null) return;
+
             nextAttackTime = Time.time + Mathf.Max(0.05f, attackCooldown);
+            IsAttacking = true;
+            Invoke(nameof(ClearAttackState), 0.12f);
+
             CombatFeedback.Slash(transform.position, facingDirection, attackRange, attackArc);
 
-            float halfArc = attackArc * 0.5f;
-            float minDot = Mathf.Cos(halfArc * Mathf.Deg2Rad);
+            float minDot = Mathf.Cos(attackArc * 0.5f * Mathf.Deg2Rad);
             Collider2D[] hits = Physics2D.OverlapCircleAll(transform.position, Mathf.Max(0.1f, attackRange));
             int damage = Mathf.Max(1, attackDamage + stats.Attack);
 
@@ -69,13 +67,26 @@ namespace ShadowAscension.Combat
                 if (enemy == null) continue;
 
                 Vector2 toEnemy = (Vector2)enemy.transform.position - (Vector2)transform.position;
-                if (toEnemy.sqrMagnitude < 0.001f) continue;
-                if (Vector2.Dot(facingDirection, toEnemy.normalized) < minDot) continue;
+                if (toEnemy.sqrMagnitude < 0.001f || Vector2.Dot(facingDirection, toEnemy.normalized) < minDot) continue;
 
                 Damageable target = enemy.GetComponent<Damageable>();
                 if (target != null && !target.IsDead && target.TakeDamage(damage))
                     CombatFeedback.Hit(enemy.transform.position, damage);
             }
+        }
+
+        public void SetFacing(Vector2 direction)
+        {
+            if (direction.sqrMagnitude < 0.01f) return;
+            facingDirection = direction.normalized;
+        }
+
+        private void ClearAttackState() => IsAttacking = false;
+
+        private void OnDisable()
+        {
+            CancelInvoke(nameof(ClearAttackState));
+            IsAttacking = false;
         }
 
         private void OnDrawGizmosSelected()
