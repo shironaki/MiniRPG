@@ -32,8 +32,9 @@ namespace ShadowAscension.Editor
             CreateEnemy("Hunter", typeof(ShadowHunter), new Vector2(-3.2f, 1.8f), 140, "hunter");
             CreateEnemy("Mage", typeof(ShadowMage), new Vector2(3.4f, -2.0f), 160, "mage");
             CreateEnemy("Elite", typeof(ShadowBrute), new Vector2(-3.6f, -2.2f), 500, "elite");
-            CreatePortal(new Vector2(0f, 4.0f));
-            CreateHUD(player);
+            GameObject boss = CreateEnemy("Dark Knight", typeof(BossController), new Vector2(0f, 2.8f), 2200, "elite");
+            CreatePortal(new Vector2(0f, 4.6f));
+            CreateHUD(player, boss.GetComponent<Damageable>());
 
             EditorSceneManager.SaveScene(scene, ScenePath);
             Selection.activeGameObject = player;
@@ -61,11 +62,9 @@ namespace ShadowAscension.Editor
             CreateTiledWall("Wall South", new Vector2(0f, -5.5f), new Vector2(16f, 0.45f));
             CreateTiledWall("Wall West", new Vector2(-8f, 0f), new Vector2(0.45f, 11f));
             CreateTiledWall("Wall East", new Vector2(8f, 0f), new Vector2(0.45f, 11f));
-
             CreateTiledWall("Inner Wall A", new Vector2(-1.5f, 2.2f), new Vector2(3.8f, 0.35f));
             CreateTiledWall("Inner Wall B", new Vector2(2.8f, -0.7f), new Vector2(0.35f, 3.0f));
             CreateTiledWall("Inner Wall C", new Vector2(-3.2f, -1.0f), new Vector2(2.2f, 0.35f));
-
             SpriteRenderer arena = CreateTiledSprite("Arena Sigil", Vector2.zero, new Vector2(4.4f, 4.4f), "floor", -10);
             arena.color = new Color(0.65f, 0.35f, 0.9f, 0.32f);
         }
@@ -74,16 +73,13 @@ namespace ShadowAscension.Editor
         {
             GameObject player = CreateSprite("Player", new Vector2(0f, -3.2f), 1.15f, "hero", 20);
             player.tag = "Player";
-
             Rigidbody2D body = player.AddComponent<Rigidbody2D>();
             body.gravityScale = 0f;
             body.freezeRotation = true;
             body.collisionDetectionMode = CollisionDetectionMode2D.Continuous;
             body.interpolation = RigidbodyInterpolation2D.Interpolate;
-
             CircleCollider2D collider = player.AddComponent<CircleCollider2D>();
             collider.radius = 0.35f;
-
             player.AddComponent<PlayerStats>();
             player.AddComponent<PlayerController>();
             player.AddComponent<PlayerCombat>();
@@ -91,23 +87,22 @@ namespace ShadowAscension.Editor
             return player;
         }
 
-        private static void CreateEnemy(string name, System.Type enemyType, Vector2 position, int health, string visualId)
+        private static GameObject CreateEnemy(string name, System.Type enemyType, Vector2 position, int health, string visualId)
         {
-            GameObject enemy = CreateSprite(name, position, name == "Elite" ? 1.35f : 0.95f, visualId, 15);
-
+            bool boss = enemyType == typeof(BossController);
+            GameObject enemy = CreateSprite(name, position, boss ? 1.65f : name == "Elite" ? 1.35f : 0.95f, visualId, 15);
             Rigidbody2D body = enemy.AddComponent<Rigidbody2D>();
             body.gravityScale = 0f;
             body.freezeRotation = true;
             body.collisionDetectionMode = CollisionDetectionMode2D.Continuous;
             body.interpolation = RigidbodyInterpolation2D.Interpolate;
-
             CircleCollider2D collider = enemy.AddComponent<CircleCollider2D>();
-            collider.radius = name == "Elite" ? 0.52f : 0.34f;
-
+            collider.radius = boss ? 0.65f : name == "Elite" ? 0.52f : 0.34f;
             Damageable damageable = enemy.AddComponent<Damageable>();
             SetSerializedInt(damageable, "maxHealth", health);
             enemy.AddComponent<EnemyRewards>();
             enemy.AddComponent(enemyType);
+            return enemy;
         }
 
         private static void CreatePortal(Vector2 position)
@@ -116,12 +111,13 @@ namespace ShadowAscension.Editor
             portal.AddComponent<Portal>();
         }
 
-        private static void CreateHUD(GameObject playerObject)
+        private static void CreateHUD(GameObject playerObject, Damageable boss)
         {
             GameObject hud = new GameObject("Shadow HUD");
             ShadowHUD shadowHud = hud.AddComponent<ShadowHUD>();
             SetObjectReference(shadowHud, "player", playerObject.GetComponent<PlayerStats>());
             SetObjectReference(shadowHud, "skills", playerObject.GetComponent<SkillSystem>());
+            SetObjectReference(shadowHud, "boss", boss);
         }
 
         private static GameObject CreateSprite(string name, Vector2 position, float scale, string visualId, int sortingOrder)
@@ -129,7 +125,6 @@ namespace ShadowAscension.Editor
             GameObject go = new GameObject(name);
             go.transform.position = new Vector3(position.x, position.y, 0f);
             go.transform.localScale = Vector3.one * scale;
-
             SpriteRenderer renderer = go.AddComponent<SpriteRenderer>();
             renderer.sprite = ShadowAscensionVisualAssets.Load(visualId);
             renderer.sortingOrder = sortingOrder;
