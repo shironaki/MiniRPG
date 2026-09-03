@@ -46,8 +46,8 @@ namespace ShadowAscension.Editor
             GameObject cameraObject = new GameObject("Main Camera");
             Camera camera = cameraObject.AddComponent<Camera>();
             camera.orthographic = true;
-            camera.orthographicSize = 5.8f;
-            camera.transform.position = new Vector3(0f, 0f, -10f);
+            camera.orthographicSize = 4.3f;
+            camera.transform.position = new Vector3(0f, 0.5f, -10f);
             camera.backgroundColor = new Color(0.006f, 0.004f, 0.014f);
             cameraObject.tag = "MainCamera";
 
