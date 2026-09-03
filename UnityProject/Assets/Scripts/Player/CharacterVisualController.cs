@@ -1,4 +1,5 @@
 using UnityEngine;
+using ShadowAscension.Combat;
 
 namespace ShadowAscension.Player
 {
@@ -13,7 +14,7 @@ namespace ShadowAscension.Player
 
         private SpriteRenderer spriteRenderer;
         private PlayerController controller;
-        private Combat.PlayerCombat combat;
+        private PlayerCombat combat;
         private Vector3 baseScale;
         private Vector3 baseLocalPosition;
 
@@ -21,7 +22,7 @@ namespace ShadowAscension.Player
         {
             spriteRenderer = GetComponent<SpriteRenderer>();
             controller = GetComponent<PlayerController>();
-            combat = GetComponent<Combat.PlayerCombat>();
+            combat = GetComponent<PlayerCombat>();
             baseScale = transform.localScale;
             baseLocalPosition = transform.localPosition;
         }
@@ -33,12 +34,12 @@ namespace ShadowAscension.Player
             float speed = moving ? moveBobSpeed : idleBobSpeed;
             float amplitude = moving ? moveBobAmplitude : idleBobAmplitude;
             float bob = Mathf.Sin(Time.time * speed) * amplitude;
-
             transform.localPosition = baseLocalPosition + Vector3.up * bob;
+
             float attackPulse = combat != null && combat.IsAttacking ? attackScale : 1f;
             transform.localScale = Vector3.Lerp(transform.localScale, baseScale * attackPulse, Time.deltaTime * 20f);
 
-            if (controller != null && controller.FacingDirection.x != 0f)
+            if (controller != null && Mathf.Abs(controller.FacingDirection.x) > 0.01f)
                 spriteRenderer.flipX = controller.FacingDirection.x < 0f;
         }
     }
