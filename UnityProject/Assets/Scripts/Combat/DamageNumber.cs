@@ -10,7 +10,14 @@ namespace ShadowAscension.Combat
 
         public void Initialize(int damage, bool critical)
         {
-            textMesh = gameObject.AddComponent<TextMesh>();
+            textMesh = GetComponent<TextMesh>();
+            if (textMesh == null) textMesh = gameObject.AddComponent<TextMesh>();
+            if (textMesh == null)
+            {
+                Destroy(this);
+                return;
+            }
+
             textMesh.text = critical ? damage + "!" : damage.ToString();
             textMesh.fontSize = critical ? 52 : 42;
             textMesh.characterSize = 0.055f;
