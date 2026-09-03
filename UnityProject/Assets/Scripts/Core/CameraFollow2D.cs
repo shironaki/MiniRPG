@@ -6,8 +6,8 @@ namespace ShadowAscension.Core
     {
         [SerializeField] private Transform target;
         [SerializeField] private float smoothTime = 0.12f;
-        [SerializeField] private Vector2 minBounds = new Vector2(-5.8f, -3.3f);
-        [SerializeField] private Vector2 maxBounds = new Vector2(5.8f, 3.3f);
+        [SerializeField] private Vector2 minBounds = new Vector2(0f, 0.5f);
+        [SerializeField] private Vector2 maxBounds = new Vector2(0f, 0.5f);
 
         private Vector3 velocity;
 
