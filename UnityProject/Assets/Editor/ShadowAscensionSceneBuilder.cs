@@ -35,10 +35,11 @@ namespace ShadowAscension.Editor
             GameObject boss = CreateEnemy("Dark Knight", typeof(BossController), new Vector2(0f, 2.8f), 2200, "elite");
             CreatePortal(new Vector2(0f, 4.6f));
             CreateHUD(player, boss.GetComponent<Damageable>());
+            CreateMobileControls();
 
             EditorSceneManager.SaveScene(scene, ScenePath);
             Selection.activeGameObject = player;
-            Debug.Log("Shadow Ascension test scene created: " + ScenePath);
+            Debug.Log("Shadow Ascension Unity 6.6 test scene created: " + ScenePath);
         }
 
         private static void CreateCamera(Transform target)
@@ -120,6 +121,12 @@ namespace ShadowAscension.Editor
             SetObjectReference(shadowHud, "player", playerObject.GetComponent<PlayerStats>());
             SetObjectReference(shadowHud, "skills", playerObject.GetComponent<SkillSystem>());
             SetObjectReference(shadowHud, "boss", boss);
+        }
+
+        private static void CreateMobileControls()
+        {
+            GameObject controls = new GameObject("Mobile Controls");
+            controls.AddComponent<MobileControls>();
         }
 
         private static GameObject CreateSprite(string name, Vector2 position, float scale, string visualId, int sortingOrder)
