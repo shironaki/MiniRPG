@@ -26,7 +26,6 @@ namespace ShadowAscension.Input
                 Destroy(gameObject);
                 return;
             }
-
             Instance = this;
         }
 
@@ -34,12 +33,9 @@ namespace ShadowAscension.Input
         {
             bool pressed = virtualAttack;
             virtualAttack = false;
-
             Keyboard keyboard = Keyboard.current;
             Mouse mouse = Mouse.current;
-            if ((keyboard != null && keyboard.jKey.wasPressedThisFrame) || (mouse != null && mouse.leftButton.wasPressedThisFrame))
-                pressed = true;
-
+            if ((keyboard != null && keyboard.jKey.wasPressedThisFrame) || (mouse != null && mouse.leftButton.wasPressedThisFrame)) pressed = true;
             return pressed;
         }
 
@@ -47,53 +43,37 @@ namespace ShadowAscension.Input
         {
             bool pressed = virtualDodge;
             virtualDodge = false;
-
             Keyboard keyboard = Keyboard.current;
-            if (keyboard != null && keyboard.spaceKey.wasPressedThisFrame)
-                pressed = true;
-
+            if (keyboard != null && keyboard.spaceKey.wasPressedThisFrame) pressed = true;
             return pressed;
         }
 
         public bool ConsumeSkill(int index)
         {
             if (index < 0 || index >= virtualSkills.Length) return false;
-
             bool pressed = virtualSkills[index];
             virtualSkills[index] = false;
-
             Keyboard keyboard = Keyboard.current;
             if (keyboard == null) return pressed;
 
-            Key key = index switch
+            pressed |= index switch
             {
-                0 => Key.Q,
-                1 => Key.E,
-                2 => Key.R,
-                _ => Key.F
+                0 => keyboard.qKey.wasPressedThisFrame,
+                1 => keyboard.eKey.wasPressedThisFrame,
+                2 => keyboard.rKey.wasPressedThisFrame,
+                _ => keyboard.fKey.wasPressedThisFrame
             };
-
-            pressed |= keyboard[key].wasPressedThisFrame;
             return pressed;
         }
 
-        public void SetVirtualMove(Vector2 value)
-        {
-            virtualMove = ApplyDeadZone(value);
-        }
-
-        public void SetVirtualAim(Vector2 value)
-        {
-            virtualAim = ApplyDeadZone(value);
-        }
-
+        public void SetVirtualMove(Vector2 value) => virtualMove = ApplyDeadZone(value);
+        public void SetVirtualAim(Vector2 value) => virtualAim = ApplyDeadZone(value);
         public void PressAttack() => virtualAttack = true;
         public void PressDodge() => virtualDodge = true;
 
         public void PressSkill(int index)
         {
-            if (index >= 0 && index < virtualSkills.Length)
-                virtualSkills[index] = true;
+            if (index >= 0 && index < virtualSkills.Length) virtualSkills[index] = true;
         }
 
         private Vector2 ReadMove()
@@ -102,16 +82,11 @@ namespace ShadowAscension.Input
             Keyboard keyboard = Keyboard.current;
             if (keyboard != null)
             {
-                value += Vector2.right * (keyboard.dKey.isPressed ? 1f : 0f);
-                value += Vector2.left * (keyboard.aKey.isPressed ? 1f : 0f);
-                value += Vector2.up * (keyboard.wKey.isPressed ? 1f : 0f);
-                value += Vector2.down * (keyboard.sKey.isPressed ? 1f : 0f);
-                value += Vector2.right * (keyboard.rightArrowKey.isPressed ? 1f : 0f);
-                value += Vector2.left * (keyboard.leftArrowKey.isPressed ? 1f : 0f);
-                value += Vector2.up * (keyboard.upArrowKey.isPressed ? 1f : 0f);
-                value += Vector2.down * (keyboard.downArrowKey.isPressed ? 1f : 0f);
+                value += Vector2.right * (keyboard.dKey.isPressed || keyboard.rightArrowKey.isPressed ? 1f : 0f);
+                value += Vector2.left * (keyboard.aKey.isPressed || keyboard.leftArrowKey.isPressed ? 1f : 0f);
+                value += Vector2.up * (keyboard.wKey.isPressed || keyboard.upArrowKey.isPressed ? 1f : 0f);
+                value += Vector2.down * (keyboard.sKey.isPressed || keyboard.downArrowKey.isPressed ? 1f : 0f);
             }
-
             return value.sqrMagnitude > 1f ? value.normalized : value;
         }
 
@@ -120,19 +95,14 @@ namespace ShadowAscension.Input
             Vector2 value = virtualAim;
             Mouse mouse = Mouse.current;
             Camera camera = Camera.main;
-
             if (mouse != null && camera != null)
             {
                 Vector3 screen = mouse.position.ReadValue();
                 screen.z = Mathf.Abs(camera.transform.position.z);
                 Vector3 world = camera.ScreenToWorldPoint(screen);
-                Vector2 mouseWorld = new Vector2(world.x, world.y);
-                Vector2 playerPosition = transform.position;
-                Vector2 mouseDirection = mouseWorld - playerPosition;
-                if (mouseDirection.sqrMagnitude > touchAimRadius * touchAimRadius)
-                    value = mouseDirection.normalized;
+                Vector2 direction = (Vector2)world - (Vector2)transform.position;
+                if (direction.sqrMagnitude > touchAimRadius * touchAimRadius) value = direction.normalized;
             }
-
             return ApplyDeadZone(value);
         }
 
