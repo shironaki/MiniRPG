@@ -59,9 +59,6 @@ namespace ShadowAscension.Combat
 
         private IEnumerator HitRoutine(Vector2 position, int damage, bool critical)
         {
-            // Deliberately avoid runtime ParticleSystem creation here. Unity 6 can
-            // start a newly added particle system before its main module is configured,
-            // which produces the duration-while-playing warning on some editor builds.
             GameObject go = new GameObject("HitFeedback");
             int rayCount = critical ? 10 : 7;
             float length = critical ? 0.62f : 0.42f;
@@ -78,9 +75,6 @@ namespace ShadowAscension.Combat
                 ray.SetPosition(0, position);
                 ray.SetPosition(1, position + direction * length);
             }
-
-            DamageNumber number = go.AddComponent<DamageNumber>();
-            number.Initialize(damage, critical);
 
             yield return new WaitForSeconds(0.16f);
             if (go != null) Destroy(go);
