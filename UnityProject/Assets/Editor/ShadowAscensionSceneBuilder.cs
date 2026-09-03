@@ -6,6 +6,7 @@ using ShadowAscension.Combat;
 using ShadowAscension.Core;
 using ShadowAscension.Dungeon;
 using ShadowAscension.Enemies;
+using ShadowAscension.Input;
 using ShadowAscension.Player;
 using ShadowAscension.UI;
 
@@ -21,7 +22,6 @@ namespace ShadowAscension.Editor
         {
             EnsureFolder(SceneFolder);
             ShadowAscensionVisualAssets.GenerateAll();
-
             Scene scene = EditorSceneManager.NewScene(NewSceneSetup.EmptyScene, NewSceneMode.Single);
             scene.name = "ShadowAscension_Test";
 
@@ -50,7 +50,6 @@ namespace ShadowAscension.Editor
             camera.transform.position = new Vector3(0f, 0f, -10f);
             camera.backgroundColor = new Color(0.006f, 0.004f, 0.014f);
             cameraObject.tag = "MainCamera";
-
             CameraFollow2D follow = cameraObject.AddComponent<CameraFollow2D>();
             follow.SetTarget(target);
             follow.SetBounds(new Vector2(-2.0f, -2.1f), new Vector2(2.0f, 2.1f));
@@ -82,9 +81,11 @@ namespace ShadowAscension.Editor
             CircleCollider2D collider = player.AddComponent<CircleCollider2D>();
             collider.radius = 0.35f;
             player.AddComponent<PlayerStats>();
+            player.AddComponent<PlayerInputRouter>();
             player.AddComponent<PlayerController>();
             player.AddComponent<PlayerCombat>();
             player.AddComponent<SkillSystem>();
+            player.AddComponent<CharacterVisualController>();
             return player;
         }
 
