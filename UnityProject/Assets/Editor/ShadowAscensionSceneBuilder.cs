@@ -46,13 +46,14 @@ namespace ShadowAscension.Editor
             GameObject cameraObject = new GameObject("Main Camera");
             Camera camera = cameraObject.AddComponent<Camera>();
             camera.orthographic = true;
-            camera.orthographicSize = 4.3f;
-            camera.transform.position = new Vector3(0f, 0.5f, -10f);
+            camera.orthographicSize = 3.4f;
+            camera.transform.position = new Vector3(0f, 0f, -10f);
             camera.backgroundColor = new Color(0.006f, 0.004f, 0.014f);
             cameraObject.tag = "MainCamera";
 
             CameraFollow2D follow = cameraObject.AddComponent<CameraFollow2D>();
             follow.SetTarget(target);
+            follow.SetBounds(new Vector2(-2.0f, -2.1f), new Vector2(2.0f, 2.1f));
         }
 
         private static void CreateWorld()
