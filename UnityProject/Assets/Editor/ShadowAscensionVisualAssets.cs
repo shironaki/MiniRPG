@@ -56,7 +56,10 @@ namespace ShadowAscension.Editor
             {
                 importer.textureType = TextureImporterType.Sprite;
                 importer.spriteImportMode = SpriteImportMode.Single;
-                importer.spriteMeshType = SpriteMeshType.FullRect;
+                TextureImporterSettings settings = new TextureImporterSettings();
+                importer.ReadTextureSettings(settings);
+                settings.spriteMeshType = SpriteMeshType.FullRect;
+                importer.SetTextureSettings(settings);
                 importer.spritePixelsPerUnit = Size;
                 importer.filterMode = FilterMode.Point;
                 importer.textureCompression = TextureImporterCompression.Uncompressed;
