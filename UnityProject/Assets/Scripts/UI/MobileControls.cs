@@ -1,5 +1,6 @@
 using UnityEngine;
 using UnityEngine.EventSystems;
+using UnityEngine.InputSystem.UI;
 using UnityEngine.UI;
 using ShadowAscension.Input;
 
@@ -11,9 +12,6 @@ namespace ShadowAscension.UI
         [SerializeField] private float joystickRadius = 90f;
 
         private PlayerInputRouter input;
-        private RectTransform canvasRect;
-        private RectTransform moveStick;
-        private RectTransform aimStick;
 
         private void Start()
         {
@@ -31,21 +29,22 @@ namespace ShadowAscension.UI
                 canvasObject.transform.SetParent(transform, false);
                 canvas = canvasObject.AddComponent<Canvas>();
                 canvas.renderMode = RenderMode.ScreenSpaceOverlay;
-                canvasObject.AddComponent<CanvasScaler>().uiScaleMode = CanvasScaler.ScaleMode.ScaleWithScreenSize;
-                canvasObject.GetComponent<CanvasScaler>().referenceResolution = new Vector2(1920f, 1080f);
+                CanvasScaler scaler = canvasObject.AddComponent<CanvasScaler>();
+                scaler.uiScaleMode = CanvasScaler.ScaleMode.ScaleWithScreenSize;
+                scaler.referenceResolution = new Vector2(1920f, 1080f);
+                scaler.matchWidthOrHeight = 0.5f;
                 canvasObject.AddComponent<GraphicRaycaster>();
             }
 
-            canvasRect = canvas.GetComponent<RectTransform>();
             if (FindFirstObjectByType<EventSystem>() == null)
             {
                 GameObject events = new GameObject("EventSystem");
                 events.AddComponent<EventSystem>();
-                events.AddComponent<StandaloneInputModule>();
+                events.AddComponent<InputSystemUIInputModule>();
             }
 
-            moveStick = CreateStick(canvas.transform, "Move Stick", new Vector2(150f, 145f));
-            aimStick = CreateStick(canvas.transform, "Aim Stick", new Vector2(-150f, 145f), true);
+            CreateStick(canvas.transform, "Move Stick", new Vector2(150f, 145f));
+            CreateStick(canvas.transform, "Aim Stick", new Vector2(-150f, 145f), true);
             CreateButton(canvas.transform, "ATTACK", new Vector2(-155f, 80f), new Vector2(120f, 120f), input.PressAttack);
             CreateButton(canvas.transform, "DODGE", new Vector2(-310f, 155f), new Vector2(86f, 86f), input.PressDodge);
 
@@ -57,7 +56,7 @@ namespace ShadowAscension.UI
             }
         }
 
-        private RectTransform CreateStick(Transform parent, string name, Vector2 anchoredPosition, bool right = false)
+        private void CreateStick(Transform parent, string name, Vector2 anchoredPosition, bool right = false)
         {
             GameObject root = new GameObject(name, typeof(RectTransform), typeof(Image));
             root.transform.SetParent(parent, false);
@@ -65,11 +64,9 @@ namespace ShadowAscension.UI
             rect.sizeDelta = new Vector2(180f, 180f);
             rect.anchorMin = rect.anchorMax = right ? new Vector2(1f, 0f) : Vector2.zero;
             rect.anchoredPosition = anchoredPosition;
-            Image image = root.GetComponent<Image>();
-            image.color = new Color(0.2f, 0.08f, 0.35f, 0.28f);
+            root.GetComponent<Image>().color = new Color(0.2f, 0.08f, 0.35f, 0.28f);
             StickHandler handler = root.AddComponent<StickHandler>();
             handler.Configure(input, right, joystickRadius);
-            return rect;
         }
 
         private void CreateButton(Transform parent, string label, Vector2 position, Vector2 size, UnityEngine.Events.UnityAction action)
@@ -80,15 +77,21 @@ namespace ShadowAscension.UI
             rect.sizeDelta = size;
             rect.anchorMin = rect.anchorMax = new Vector2(1f, 0f);
             rect.anchoredPosition = position;
-            Image image = root.GetComponent<Image>();
-            image.color = new Color(0.22f, 0.08f, 0.38f, 0.55f);
+            root.GetComponent<Image>().color = new Color(0.22f, 0.08f, 0.38f, 0.55f);
             root.GetComponent<Button>().onClick.AddListener(action);
+
             GameObject textObject = new GameObject("Label", typeof(RectTransform), typeof(Text));
             textObject.transform.SetParent(root.transform, false);
             RectTransform textRect = textObject.GetComponent<RectTransform>();
-            textRect.anchorMin = Vector2.zero; textRect.anchorMax = Vector2.one; textRect.offsetMin = Vector2.zero; textRect.offsetMax = Vector2.zero;
+            textRect.anchorMin = Vector2.zero;
+            textRect.anchorMax = Vector2.one;
+            textRect.offsetMin = Vector2.zero;
+            textRect.offsetMax = Vector2.zero;
             Text text = textObject.GetComponent<Text>();
-            text.text = label; text.alignment = TextAnchor.MiddleCenter; text.fontSize = Mathf.RoundToInt(size.x * 0.22f); text.color = Color.white;
+            text.text = label;
+            text.alignment = TextAnchor.MiddleCenter;
+            text.fontSize = Mathf.RoundToInt(size.x * 0.22f);
+            text.color = Color.white;
             text.font = Resources.GetBuiltinResource<Font>("LegacyRuntime.ttf");
         }
 
@@ -101,19 +104,24 @@ namespace ShadowAscension.UI
 
             public void Configure(PlayerInputRouter router, bool aimStick, float stickRadius)
             {
-                input = router; aim = aimStick; radius = stickRadius; rect = transform as RectTransform;
+                input = router;
+                aim = aimStick;
+                radius = stickRadius;
+                rect = transform as RectTransform;
             }
 
             public void OnPointerDown(PointerEventData eventData) => UpdateValue(eventData);
             public void OnDrag(PointerEventData eventData) => UpdateValue(eventData);
+
             public void OnPointerUp(PointerEventData eventData)
             {
+                if (input == null) return;
                 if (aim) input.SetVirtualAim(Vector2.zero); else input.SetVirtualMove(Vector2.zero);
             }
 
             private void UpdateValue(PointerEventData eventData)
             {
-                if (input == null) return;
+                if (input == null || rect == null) return;
                 RectTransformUtility.ScreenPointToLocalPointInRectangle(rect, eventData.position, eventData.pressEventCamera, out Vector2 local);
                 Vector2 value = Vector2.ClampMagnitude(local / Mathf.Max(1f, radius), 1f);
                 if (aim) input.SetVirtualAim(value); else input.SetVirtualMove(value);
