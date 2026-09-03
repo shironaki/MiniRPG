@@ -7,8 +7,8 @@ namespace ShadowAscension.Input
     {
         public static PlayerInputRouter Instance { get; private set; }
 
-        [SerializeField] private float virtualDeadZone = 0.12f;
-        [SerializeField] private float touchAimRadius = 1.5f;
+        [SerializeField, Range(0f, 0.5f)] private float virtualDeadZone = 0.12f;
+        [SerializeField, Min(0f)] private float touchAimRadius = 1.5f;
 
         private Vector2 virtualMove;
         private Vector2 virtualAim;
@@ -18,6 +18,9 @@ namespace ShadowAscension.Input
 
         public Vector2 Move => ReadMove();
         public Vector2 Aim => ReadAim();
+
+        [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]
+        private static void ResetStatics() => Instance = null;
 
         private void Awake()
         {
@@ -55,7 +58,6 @@ namespace ShadowAscension.Input
             virtualSkills[index] = false;
             Keyboard keyboard = Keyboard.current;
             if (keyboard == null) return pressed;
-
             pressed |= index switch
             {
                 0 => keyboard.qKey.wasPressedThisFrame,
