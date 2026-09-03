@@ -28,6 +28,8 @@ namespace ShadowAscension.Editor
 
         public static Sprite Load(string id)
         {
+            Sprite sprite = AssetDatabase.LoadAssetAtPath<Sprite>($"{Folder}/{id}.png");
+            if (sprite != null) return sprite;
             GenerateAll();
             return AssetDatabase.LoadAssetAtPath<Sprite>($"{Folder}/{id}.png");
         }
@@ -54,11 +56,12 @@ namespace ShadowAscension.Editor
             {
                 importer.textureType = TextureImporterType.Sprite;
                 importer.spriteImportMode = SpriteImportMode.Single;
+                importer.spriteMeshType = SpriteMeshType.FullRect;
                 importer.spritePixelsPerUnit = Size;
                 importer.filterMode = FilterMode.Point;
                 importer.textureCompression = TextureImporterCompression.Uncompressed;
                 importer.mipmapEnabled = false;
-                importer.alphaIsTransparency = true;
+                importer.alphaIsTransparency = transparent;
                 importer.wrapMode = TextureWrapMode.Clamp;
                 importer.SaveAndReimport();
             }
