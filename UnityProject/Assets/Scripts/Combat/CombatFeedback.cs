@@ -41,6 +41,7 @@ namespace ShadowAscension.Combat
             line.widthMultiplier = 0.075f;
             line.numCapVertices = 2;
             line.numCornerVertices = 2;
+            line.sortingOrder = 50;
 
             Vector2 forward = direction.sqrMagnitude > 0.01f ? direction.normalized : Vector2.up;
             float start = -arcDegrees * 0.5f;
@@ -70,6 +71,7 @@ namespace ShadowAscension.Combat
                 ray.useWorldSpace = true;
                 ray.widthMultiplier = critical ? 0.055f : 0.04f;
                 ray.numCapVertices = 2;
+                ray.sortingOrder = 50;
                 float angle = (360f * i / rayCount) * Mathf.Deg2Rad;
                 Vector2 direction = new Vector2(Mathf.Cos(angle), Mathf.Sin(angle));
                 ray.SetPosition(0, position);
