@@ -6,8 +6,14 @@ namespace ShadowAscension.Core
     {
         public static GameManager Instance { get; private set; }
 
-        [SerializeField] private int startingLevel = 1;
+        [SerializeField, Min(1)] private int startingLevel = 1;
         public int PlayerLevel { get; private set; }
+
+        [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]
+        private static void ResetStatics()
+        {
+            Instance = null;
+        }
 
         private void Awake()
         {
@@ -19,7 +25,7 @@ namespace ShadowAscension.Core
 
             Instance = this;
             DontDestroyOnLoad(gameObject);
-            PlayerLevel = startingLevel;
+            PlayerLevel = Mathf.Max(1, startingLevel);
         }
     }
 }
