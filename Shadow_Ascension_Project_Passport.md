@@ -1,6 +1,6 @@
 # SHADOW ASCENSION — ПАСПОРТ ПРОЕКТА
-Версия документа: 1.7
-Дата: 2026-09-02
+Версия документа: 1.8
+Дата: 2026-09-30
 
 ## ГЛАВНАЯ ТОЧКА ВОЗВРАТА
 Репозиторий: https://github.com/shironaki/MiniRPG
@@ -14,8 +14,9 @@
 
 ## ТЕКУЩАЯ СТРУКТУРА
 Корень: `index.html`, `style.css`, `Shadow_Ascension_Project_Passport.md`
-JS: `camera.js`, `dungeon.js`, `effects.js`, `enemy.js`, `game.js`, `gameLoop.js`, `input.js`, `main.js`, `player.js`
-Assets: `assets/player/*` и `assets/enemies/shadow-beast.svg`
+АКТИВНЫЙ RUNTIME: `index.html` → Phaser 3.90 CDN → `js/shadow-engine.js`.
+LEGACY JS: `game.js`, `gameLoop.js`, `input.js`, `camera.js`, `dungeon.js`, `effects.js`, `enemy.js`, `player.js`, `main.js` сохранены для старой Canvas-ветки и сейчас НЕ подключаются `index.html`.
+Assets: `assets/player/*` и `assets/enemies/shadow-beast.svg`.
 
 ## РАБОТАЕТ
 - Canvas/game loop/HUD/camera;
@@ -45,7 +46,22 @@ Assets: `assets/player/*` и `assets/enemies/shadow-beast.svg`
 - ranged projectiles с collision;
 - knockback при ударе;
 - enemy death particles;
-- enemy hit flash и разные HP-bar accents.
+- enemy hit flash и разные HP-bar accents;
+- Phaser runtime с keyboard/mouse/touch controls;
+- безопасный поиск spawn-позиции вокруг заданной точки;
+- 4 последовательных combat-room вместо 3;
+- отдельная Elite-комната перед Boss;
+- Elite Hunter с отдельными HP/скоростью/уроном/визуалом;
+- Boss вынесен в Room 4.
+
+## ЭТАП 1.8 — ACTIVE PHASER RUNTIME + ELITE GATE
+Сделано:
+- подтверждён фактический активный runtime: `js/shadow-engine.js`;
+- добавлена spawn safety-проверка для врагов и elite/boss;
+- progression расширен до Room 1 → Room 2 → Room 3 (Elite) → Room 4 (Boss);
+- Elite Hunter добавлен как отдельный тип encounter;
+- Boss оставлен отдельным финальным encounter;
+- `main` не изменён.
 
 ## ЭТАП 1.7 — ENEMY COMBAT VARIETY
 Сделано:
@@ -65,10 +81,13 @@ Assets: `assets/player/*` и `assets/enemies/shadow-beast.svg`
 `Player` отвечает за игрока. `Enemy` отвечает за собственное движение, атаку, HP и визуал. `Game` управляет сценой, комнатами, переходами, наградами и projectile lifecycle. `Dungeon` отвечает за геометрию, collision, двери и portal. `Effects` отвечает за particles и combat feedback.
 
 ## СЛЕДУЮЩИЙ ПЛАН
-1. Улучшить spawn/позиционирование врагов и исключить застревание в стенах.
-2. Elite-враг: усиленные параметры, aura, отдельный HP/UI.
-3. Boss encounter в конце dungeon.
-4. Boss phases и telegraphed attacks.
+1. Проверить в браузере Room 1 → Room 2 → Elite Room → Boss Room и spawn safety.
+2. Добавить отдельный Elite HP/UI и телеграф атак.
+3. Boss phases и telegraphed attacks.
+4. Loot/equipment.
+5. Death/restart/run result.
+6. Shadow Extraction.
+7. ARISE / shadow army.
 5. Loot/equipment.
 6. Death/restart/run result.
 7. Shadow Extraction.
@@ -78,4 +97,4 @@ Assets: `assets/player/*` и `assets/enemies/shadow-beast.svg`
 Не останавливаться без весомой причины. Перед изменением структуры сверять фактические файлы. `main` не трогать. Ошибки исправлять до следующего слоя. После каждого существенного этапа обновлять паспорт.
 
 ## КОРОТКИЙ ПРОМПТ ДЛЯ НОВОЙ СЕССИИ
-«Бро, продолжаем Shadow Ascension. Работай в `shadow-ascension` репозитория MiniRPG. Прочитай паспорт, НЕ трогай `main`, сверяй реальные файлы. Не останавливайся без весомой причины — я сам остановлю. Сейчас есть 3 комнаты/двери/portal, player assets + animation/combat feedback, Enemy class, Shadow Beast asset, melee/fast/ranged AI, ranged projectiles, knockback и death effects. Продолжай с spawn safety → elite → boss → loot → death → shadows/ARISE.»
+«Бро, продолжаем Shadow Ascension. Работай в `shadow-ascension` репозитория MiniRPG. Прочитай паспорт и сверяй реальные файлы. `main` НЕ трогать. Активный runtime — `index.html` + Phaser 3.90 + `js/shadow-engine.js`; старые Canvas JS не подключены. Сейчас progression: Room 1 → Room 2 → Room 3 Elite → Room 4 Boss; есть keyboard/mouse/touch, combat, projectiles, portal и spawn safety. Продолжай с проверки Elite → отдельный Elite UI/telegraphs → Boss phases → loot → death → shadows/ARISE. Не останавливайся без весомой причины.»
